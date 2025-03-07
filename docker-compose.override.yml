@@ -1,0 +1,12 @@
+services:
+  app:
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run start:dev
+
+  database:
+    ports:
+      - "5432:5432"

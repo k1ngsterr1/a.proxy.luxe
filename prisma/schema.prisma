@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProxyType {
+  HTTP
+  SOCKS5
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELED
+}
+
+enum PaymentGateway {
+  CARD
+  WMZ
+  BTC
+  LTC
+  DOGE
+  QIWI
+  PAYEER
+  ENOT
+  PERFECT_MONEY
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  slug        String?  @db.VarChar(255)
+  description String?  @db.Text
+  articles    Article[]
+}
+
+model Article {
+  id              String   @id @default(uuid())
+  title           String
+  content        String   @db.Text
+  image          String?  // nullable
+  seoKeywords    String[] // аналог simple-array
+  seoDescription String?  @db.Text
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id])
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(255)
+  price     Decimal
+  orders    Order[]
+}
+
+model Order {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  productId   String
+  product     Product       @relation(fields: [productId], references: [id])
+  country     String
+  quantity    Int
+  periodDays  Int
+  proxyType   ProxyType     @default(HTTP)
+  status      PaymentStatus @default(PENDING)
+  totalPrice  Decimal
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
