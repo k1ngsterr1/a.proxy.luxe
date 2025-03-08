@@ -5,7 +5,7 @@ import { IpService } from './ip.service';
 import { Request } from 'express';
 
 @ApiTags('Services')
-@Controller('services/ip')
+@Controller('v1/services/ip')
 export class IpController {
   constructor(private readonly ipService: IpService) {}
 

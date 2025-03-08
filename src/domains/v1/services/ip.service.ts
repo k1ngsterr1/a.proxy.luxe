@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Req } from '@nestjs/common';
 import { Request } from 'express';
 import axios from 'axios';
 import { IpInfoDto } from './dto/ip-info.dto';
@@ -6,20 +6,42 @@ import { IncomingHttpHeaders } from 'http';
 
 @Injectable()
 export class IpService {
-  async getIpInfo(req: Request): Promise<IpInfoDto> {
-    const ip = this.getClientIp(req);
-    const geoData = await this.getGeoData(ip);
+  async getIpInfo(@Req() req): Promise<IpInfoDto> {
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    console.log(ip);
 
-    return {
-      ip,
-      country: `${geoData.country_name} (${geoData.country_code})`,
-      city: geoData.city,
-      postalCode: geoData.postal,
-      latitude: geoData.latitude,
-      longitude: geoData.longitude,
-      time: this.formatTime(geoData.time_zone),
-      headers: this.parseHeaders(req.headers),
-    };
+    try {
+      // Запрос к API для получения информации о IP
+      const response = await axios.get(`http://ip-api.com/json/${ip}`);
+      const data = response.data;
+      console.log(data);
+
+      return {
+        ip,
+        host: req.hostname,
+        country: data.country,
+        city: data.city,
+        zipcode: data.zip,
+        latitude: data.lat,
+        longitude: data.lon,
+        time: new Date().toLocaleString('en-US', { timeZone: data.timezone }),
+        database: 'MaxMind | IP2Location',
+        headers: {
+          xForwardedFor: req.headers['x-forwarded-for'],
+          connection: req.headers['connection'],
+          xForwardedProto: req.headers['x-forwarded-proto'],
+          referer: req.headers['referer'],
+          userAgent: req.headers['user-agent'],
+          accept: req.headers['accept'],
+          acceptEncoding: req.headers['accept-encoding'],
+          acceptLanguage: req.headers['accept-language'],
+          acceptCharset: req.headers['accept-charset'],
+          cookie: req.headers['cookie'],
+        },
+      };
+    } catch (error) {
+      throw new Error('Ошибка при получении данных об IP');
+    }
   }
 
   private getClientIp(req: Request): string {
