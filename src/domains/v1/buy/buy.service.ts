@@ -20,7 +20,6 @@ export class BuyService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {
     axios.defaults.baseURL = `https://proxy-seller.com/personal/api/v1/${this.configService.get<string>('PROXY_SELLER')}`;
     this.axios = axios;
-    this.getReferences('ipv6');
   }
 
   async onModuleInit() {

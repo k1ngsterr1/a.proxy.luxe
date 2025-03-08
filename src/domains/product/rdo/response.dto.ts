@@ -4,31 +4,32 @@ interface Option {
 }
 
 export interface ResponseReferenceDTO {
-  status: "success",
+  status: 'success';
   isp: {
     country: Option[];
     period: Option[];
     targets: Option[];
-  },
+  };
   ipv6: {
     country: Option[];
     period: Option[];
     targets: Option[];
-  },
+  };
   resident: {
     targets: Option[];
     tariffs: Option[];
-  },
+  };
   amounts: Option[];
 }
 
 export interface ResponseCalcDTO {
-  status: "success",
+  status: 'success';
   totalPrice: number;
   price: number;
 }
 
 export interface ResponseErrorDTO {
-  status: "error",
+  status: 'error';
   message: string;
+  error?: string;
 }

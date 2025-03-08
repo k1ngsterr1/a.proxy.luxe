@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import axios, { Axios, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -6,10 +6,15 @@ import {
   ReferenceError,
   ReferenceResponse,
 } from './dto/reference.response';
-import { ResponseCalcDTO, ResponseErrorDTO, ResponseReferenceDTO } from './dto/response.dto';
+import {
+  ResponseCalcDTO,
+  ResponseErrorDTO,
+  ResponseReferenceDTO,
+} from './rdo/response.dto';
 import { CalcRequest, CalcResidentRequest } from './dto/calc.request';
 import { CalcRequestDTO, CalcResidentRequestDTO } from './dto/request.dto';
-import { CalcResponse } from './dto/calc.response';
+import { CalcResponse } from './rdo/calc.response';
+import { ActiveProxy, ActiveProxyType } from './rdo/get-active-proxy.rdo';
 
 @Injectable()
 export class ProductService {
@@ -108,22 +113,26 @@ export class ProductService {
     };
   }
 
-  async getCalc(query: CalcRequestDTO): Promise<ResponseCalcDTO | ResponseErrorDTO> {
+  async getCalc(
+    query: CalcRequestDTO,
+  ): Promise<ResponseCalcDTO | ResponseErrorDTO> {
     const request: CalcRequest = {
       countryId: query.countryId,
       periodId: query.periodId,
       quantity: query.quantity,
       paymentId: 1,
-      coupon: '',
-      authorization: '',
-      customTargetName: "null",
+      customTargetName: query.customTargetName,
     };
 
     if (query.protocol) {
       request.protocol = query.protocol;
     }
 
-    const response:AxiosResponse<CalcResponse> = await this.proxySeller.post('/order/calc', request);
+    const response: AxiosResponse<CalcResponse> = await this.proxySeller.post(
+      '/order/calc',
+      request,
+    );
+    console.log(response.data);
 
     const calc = response.data;
 
@@ -131,6 +140,7 @@ export class ProductService {
       return {
         status: 'error',
         message: 'Error accessing the service. Repeat the request later!',
+        error: calc.errors[0].message,
       };
     }
 
@@ -138,19 +148,24 @@ export class ProductService {
     const totalPrice = price * query.quantity;
 
     return {
-      status: "success",
+      status: 'success',
       price: parseFloat(price.toFixed(2)),
-      totalPrice: parseFloat(totalPrice.toFixed(2))
-    }
+      totalPrice: parseFloat(totalPrice.toFixed(2)),
+    };
   }
 
-  async getCalcResident(query: CalcResidentRequestDTO): Promise<ResponseCalcDTO | ResponseErrorDTO> {
+  async getCalcResident(
+    query: CalcResidentRequestDTO,
+  ): Promise<ResponseCalcDTO | ResponseErrorDTO> {
     const request: CalcResidentRequest = {
-      coupon: "",
+      coupon: '',
       paymentId: 1,
       tarifId: query.tariffId,
     };
-    const response: AxiosResponse<CalcResponse> = await this.proxySeller.post("/order/calc", request);
+    const response: AxiosResponse<CalcResponse> = await this.proxySeller.post(
+      '/order/calc',
+      request,
+    );
     const calc = response.data;
     console.log(calc);
     if (!calc.data) {
@@ -164,9 +179,28 @@ export class ProductService {
     const totalPrice = price * query.quantity;
 
     return {
-      status: "success",
+      status: 'success',
       price: parseFloat(price.toFixed(2)),
-      totalPrice: parseFloat(totalPrice.toFixed(2))
+      totalPrice: parseFloat(totalPrice.toFixed(2)),
+    };
+  }
+
+  async getActiveProxyList(type: string | undefined) {
+    if (type && !Object.keys(ActiveProxyType).includes(type)) {
+      throw new HttpException('Invalid proxy type', 400);
+    }
+    try {
+      const response: AxiosResponse<ActiveProxy[]> = await this.proxySeller.get(
+        `/proxy/list${type ? `/${type}` : ''}`,
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching active proxy list:', error);
+      return {
+        status: 'error',
+        message: 'Error fetching active proxy list',
+      };
     }
   }
 }
