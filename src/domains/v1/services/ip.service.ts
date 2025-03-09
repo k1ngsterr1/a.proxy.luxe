@@ -14,7 +14,32 @@ export class IpService {
       // Запрос к API для получения информации о IP
       const response = await axios.get(`http://ip-api.com/json/${ip}`);
       const data = response.data;
-      console.log(data);
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: data.timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+
+      interface FormattedDate {
+        day: string;
+        month: string;
+        year: string;
+        hour: string;
+        minute: string;
+      }
+
+      const formatted = formatter
+        .formatToParts(new Date())
+        .reduce((acc: FormattedDate, part) => {
+          acc[part.type as keyof FormattedDate] = part.value;
+          return acc;
+        }, {} as FormattedDate);
+
+      const time = `${formatted.day}-${formatted.month}-${formatted.year}, ${formatted.hour}:${formatted.minute} (${data.timezone ?? 'Unknown'})`;
 
       return {
         ip,
@@ -24,7 +49,7 @@ export class IpService {
         zipcode: data.zip,
         latitude: data.lat,
         longitude: data.lon,
-        time: new Date().toLocaleString('en-US', { timeZone: data.timezone }),
+        time: time,
         database: 'MaxMind | IP2Location',
         headers: {
           xForwardedFor: req.headers['x-forwarded-for'],
