@@ -13,17 +13,17 @@ RUN apk add --no-cache \
 # Стадия для разработки
 FROM base AS dev
 ENV NODE_ENV=development
-COPY . .
-RUN npm install --package-lock-only
-CMD ["npm", "run", "dev"]
+COPY . .  
+RUN yarn install --frozen-lockfile
+CMD ["yarn", "run", "dev"]
 
 # Стадия для production
 FROM base AS production
 ENV NODE_ENV=production
-COPY package*.json ./
-RUN npm install --package-lock-only
-COPY . .
-RUN npm run build
+COPY package*.json ./  
+RUN yarn install --frozen-lockfile  
+COPY . .  
+RUN yarn build  
 
 # Финальный образ
 FROM node:20.12.2-alpine
@@ -31,7 +31,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=production /app/node_modules ./node_modules
 COPY --from=production /app/dist ./dist
-COPY --from=production /app/package.json ./
+COPY --from=production /app/package.json ./  
 
 RUN chown -R node:node /app
 USER node
