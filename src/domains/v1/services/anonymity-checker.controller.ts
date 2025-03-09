@@ -5,7 +5,7 @@ import { AnonymityCheckerService } from './anonymity-checker.service';
 import { Request } from 'express';
 
 @ApiTags('Services')
-@Controller('services/anonymity-checker')
+@Controller('v1/services/anonymity-checker')
 export class AnonymityCheckerController {
   constructor(
     private readonly anonymityCheckerService: AnonymityCheckerService,

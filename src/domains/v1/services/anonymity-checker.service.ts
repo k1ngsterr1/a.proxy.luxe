@@ -1,6 +1,7 @@
 import { Injectable, Req } from '@nestjs/common';
 import { Request } from 'express';
 import axios from 'axios';
+import * as dns from 'dns/promises';
 import { AnonymityCheckDto } from './dto/anonymity-check.dto';
 
 @Injectable()
@@ -8,8 +9,24 @@ export class AnonymityCheckerService {
   async checkAnonymity(@Req() req: Request): Promise<AnonymityCheckDto> {
     const ip = this.getClientIp(req);
     const geoData = await this.getGeoData(ip);
-    const userAgent = req.headers['user-agent'] ?? ''; // Защита от undefined
-    const anonymityLevel = this.calculateAnonymityLevel(req);
+    const userAgent = req.headers['user-agent'] ?? '';
+    const acceptLanguage = req.headers['accept-language'] ?? '';
+    const isProxy = geoData.proxy || false;
+    const isVpn = geoData.vpn || false;
+    const isTor = await this.checkTor(ip);
+    const isBlacklisted = await this.checkBlacklist(ip);
+    const languageMismatch = this.checkLanguageMismatch(
+      geoData.country_code,
+      acceptLanguage,
+    );
+
+    const anonymityLevel = this.calculateAnonymityLevel(
+      isProxy,
+      isVpn,
+      isTor,
+      isBlacklisted,
+      languageMismatch,
+    );
 
     return {
       ip,
@@ -17,28 +34,28 @@ export class AnonymityCheckerService {
       city: geoData.city,
       postalCode: geoData.postal,
       coordinates: `${geoData.latitude}, ${geoData.longitude}`,
-      os: this.detectOs(userAgent), // Исправлено: userAgent всегда строка
-      browser: this.detectBrowser(userAgent), // Исправлено: userAgent всегда строка
-      timezone: geoData.timezone,
-      ipTime: this.formatTime(geoData.timezone),
+      os: this.detectOs(userAgent),
+      browser: this.detectBrowser(userAgent),
+      timezone: geoData.time_zone,
+      ipTime: this.formatTime(geoData.time_zone),
       systemTime: new Date().toLocaleString(),
-      userAgent, // Исправлено: userAgent всегда строка
-      userAgentMatch: true, // Заглушка, требует реализации на клиенте
-      browserLanguage: req.headers['accept-language'] ?? 'unknown',
-      screenResolution: 'unknown', // Заглушка, требует реализации на клиенте
+      userAgent,
+      userAgentMatch: true, // Client-side implementation needed
+      browserLanguage: acceptLanguage || 'unknown',
+      screenResolution: 'unknown', // Client-side implementation needed
       anonymityLevel,
-      isProxy: this.checkProxy(ip),
-      isVpn: this.checkVpn(ip),
-      isTor: this.checkTor(ip),
-      isAnonymizer: false,
-      isBlacklisted: await this.checkBlacklist(ip),
-      isFlashEnabled: false,
-      isJavaEnabled: false,
-      isActiveXEnabled: false,
-      isWebRtcEnabled: true,
-      webRtcIps: [], // Заглушка, требует реализации на клиенте
-      checksCount: 10, // Заглушка
-      blacklistCount: 2, // Заглушка
+      isProxy,
+      isVpn,
+      isTor,
+      isAnonymizer: false, // Additional check needed
+      isBlacklisted,
+      isFlashEnabled: false, // Client-side implementation needed
+      isJavaEnabled: false, // Client-side implementation needed
+      isActiveXEnabled: false, // Client-side implementation needed
+      isWebRtcEnabled: true, // Client-side implementation needed
+      webRtcIps: [], // Client-side implementation needed
+      checksCount: 10, // Update based on actual checks
+      blacklistCount: isBlacklisted ? 1 : 0, // Update based on actual checks
     };
   }
 
@@ -52,45 +69,99 @@ export class AnonymityCheckerService {
   }
 
   private formatTime(timezone: string): string {
-    return new Date().toLocaleString('ru-RU', { timeZone: timezone });
+    return new Date().toLocaleString('en-US', { timeZone: timezone });
   }
 
   private detectOs(userAgent: string): string {
-    if (userAgent.includes('Windows')) return 'Windows';
-    if (userAgent.includes('Mac OS')) return 'Mac OS';
-    if (userAgent.includes('Linux')) return 'Linux';
+    if (/windows/i.test(userAgent)) return 'Windows';
+    if (/mac os/i.test(userAgent)) return 'Mac OS';
+    if (/linux/i.test(userAgent)) return 'Linux';
     return 'Unknown';
   }
 
   private detectBrowser(userAgent: string): string {
-    if (userAgent.includes('Chrome')) return 'Chrome';
-    if (userAgent.includes('Firefox')) return 'Firefox';
-    if (userAgent.includes('Safari')) return 'Safari';
+    if (/chrome/i.test(userAgent)) return 'Chrome';
+    if (/firefox/i.test(userAgent)) return 'Firefox';
+    if (/safari/i.test(userAgent)) return 'Safari';
     return 'Unknown';
   }
 
-  private calculateAnonymityLevel(req: Request): number {
-    // Логика расчета уровня анонимности
-    return 80; // Заглушка
-  }
-
-  private checkProxy(ip: string): boolean {
-    // Логика проверки прокси
-    return false;
-  }
-
-  private checkVpn(ip: string): boolean {
-    // Логика проверки VPN
-    return false;
-  }
-
-  private checkTor(ip: string): boolean {
-    // Логика проверки Tor
-    return false;
+  private async checkTor(ip: string): Promise<boolean> {
+    try {
+      const response = await axios.get(
+        'https://check.torproject.org/torbulkexitlist',
+      );
+      const torExitNodes = response.data
+        .split('\n')
+        .filter((node) => node.trim() !== '');
+      return torExitNodes.includes(ip);
+    } catch (error) {
+      console.error('Error checking Tor exit nodes:', error);
+      return false;
+    }
   }
 
   private async checkBlacklist(ip: string): Promise<boolean> {
-    // Логика проверки черного списка
-    return false;
+    const reversedIp = ip.split('.').reverse().join('.');
+    const query = `${reversedIp}.zen.spamhaus.org`;
+    try {
+      await dns.resolve4(query);
+      return true;
+    } catch (error) {
+      if (error.code === 'ENOTFOUND') return false;
+      console.error('DNS lookup error:', error);
+      return false;
+    }
+  }
+
+  private checkLanguageMismatch(
+    countryCode: string,
+    acceptLanguage: string,
+  ): boolean {
+    if (!acceptLanguage) return false;
+    const expectedLangs = this.getExpectedLanguages(countryCode);
+    if (expectedLangs.length === 0) return false;
+
+    const userLangs = acceptLanguage.split(',').map((lang) => {
+      const [language] = lang.split(';');
+      return language.trim().toLowerCase();
+    });
+
+    return !userLangs.some((lang) => expectedLangs.includes(lang));
+  }
+
+  private getExpectedLanguages(countryCode: string): string[] {
+    const languageMap: { [key: string]: string[] } = {
+      US: ['en'],
+      GB: ['en'],
+      DE: ['de'],
+      FR: ['fr'],
+      ES: ['es'],
+      IT: ['it'],
+      JP: ['ja'],
+      CN: ['zh'],
+      RU: ['ru'],
+      BR: ['pt'],
+    };
+    return languageMap[countryCode ? countryCode.toUpperCase() : '-'] || [];
+  }
+
+  private calculateAnonymityLevel(
+    isProxy: boolean,
+    isVpn: boolean,
+    isTor: boolean,
+    isBlacklisted: boolean,
+    languageMismatch: boolean,
+  ): number {
+    let level = 0;
+
+    if (isTor) level = 70;
+    else if (isVpn) level = 50;
+    else if (isProxy) level = 30;
+
+    if (isBlacklisted) level += 20;
+    if (languageMismatch) level += 10;
+
+    return Math.min(Math.max(40, level), 100);
   }
 }
