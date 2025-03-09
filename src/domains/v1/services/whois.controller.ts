@@ -5,7 +5,7 @@ import { WhoisRequestDto } from './dto/whois-request.dto';
 import { WhoisResponseDto } from './dto/whois-response.dto';
 
 @ApiTags('Services')
-@Controller('services/whois')
+@Controller('v1/services/whois')
 export class WhoisController {
   constructor(private readonly whoisService: WhoisService) {}
 
