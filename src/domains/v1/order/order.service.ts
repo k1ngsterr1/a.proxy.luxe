@@ -2,44 +2,53 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  HttpException,
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PaymentOrderDto } from './dto/payment-order.dto';
 import { PaymentGateway, PaymentStatus, ProxyType } from '@prisma/client';
 import { PrismaService } from '../shared/prisma.service';
+import { ProductService } from 'src/domains/product/product.service';
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private productService: ProductService,
+  ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: createOrderDto.user_id },
-    });
-
-    const product = await this.prisma.product.findUnique({
-      where: { id: createOrderDto.product_id },
-    });
-
-    if (!user || !product) {
-      throw new NotFoundException('User or Product not found');
+    const reference = await this.productService.getProductReferenceByType(
+      createOrderDto.type,
+    );
+    if (reference.status !== 'success') {
+      throw new HttpException(
+        reference.message || 'Invalid reference data',
+        400,
+      );
+    }
+    const isValidCountry = reference.country.some((name) =>
+      name.text.endsWith(createOrderDto.country),
+    );
+    if (!isValidCountry) {
+      throw new HttpException('Invalid country', 400);
+    }
+    const isValidPeriod = reference.period.some((period) =>
+      period.id.endsWith(createOrderDto.periodDays),
+    );
+    if (!isValidPeriod) {
+      throw new HttpException('Invalid period', 400);
     }
 
-    const totalPrice =
-      Number(product.price) *
-      createOrderDto.quantity *
-      createOrderDto.period_days;
-
-    return this.prisma.order.create({
+    return await this.prisma.order.create({
       data: {
-        userId: createOrderDto.user_id,
-        productId: createOrderDto.product_id,
+        userId: createOrderDto.userId,
         country: createOrderDto.country,
         quantity: createOrderDto.quantity,
-        periodDays: createOrderDto.period_days,
-        proxyType: createOrderDto.proxy_type as ProxyType,
+        periodDays: createOrderDto.periodDays,
+        proxyType: createOrderDto.proxyType,
         status: PaymentStatus.PENDING,
-        totalPrice,
+        totalPrice: createOrderDto.totalPrice,
       },
     });
   }
@@ -48,7 +57,6 @@ export class OrderService {
     return this.prisma.order.findMany({
       include: {
         user: true,
-        product: true,
       },
     });
   }

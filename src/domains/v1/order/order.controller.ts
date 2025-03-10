@@ -6,29 +6,29 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PaymentOrderDto } from './dto/payment-order.dto';
 import { OrderDto } from './dto/order.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Orders')
-@Controller('orders')
+@Controller('v1/orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Создать новый заказ' })
-  @ApiResponse({ status: 201, description: 'Заказ создан', type: OrderDto })
-  @ApiResponse({ status: 404, description: 'Пользователь/продукт не найден' })
-  async create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.create(createOrderDto);
+  @UseGuards(AuthGuard('jwt'))
+  async create(@Body() createOrderDto: CreateOrderDto, @Request() request) {
+    createOrderDto.userId = request.user.id;
+    return await this.orderService.create(createOrderDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Получить все заказы' })
-  @ApiResponse({ status: 200, description: 'Список заказов', type: [OrderDto] })
   findAll() {
     return this.orderService.findAll();
   }

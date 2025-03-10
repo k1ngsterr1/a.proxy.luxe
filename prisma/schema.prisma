@@ -14,8 +14,14 @@ datasource db {
 }
 
 enum ProxyType {
-  HTTP
+  HTTPS
   SOCKS5
+}
+
+enum Proxy {
+  ipv6
+  ipv4
+  isp
 }
 
 enum PaymentStatus {
@@ -64,23 +70,15 @@ model Article {
   category       Category @relation(fields: [categoryId], references: [id])
 }
 
-model Product {
-  id        String   @id @default(uuid())
-  name      String   @db.VarChar(255)
-  price     Decimal
-  orders    Order[]
-}
 
 model Order {
   id          String        @id @default(uuid())
   userId      String
   user        User          @relation(fields: [userId], references: [id])
-  productId   String
-  product     Product       @relation(fields: [productId], references: [id])
   country     String
   quantity    Int
-  periodDays  Int
-  proxyType   ProxyType     @default(HTTP)
+  periodDays  String
+  proxyType   ProxyType     @default(HTTPS)
   status      PaymentStatus @default(PENDING)
   totalPrice  Decimal
   createdAt   DateTime      @default(now())

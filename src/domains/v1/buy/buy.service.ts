@@ -23,10 +23,10 @@ export class BuyService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.getReferences('ipv6');
+    await this.getReferences('ipv4');
   }
 
-  async getReferences(type: 'isp' | 'ipv6' | 'resident') {
+  async getReferences(type: 'isp' | 'ipv6' | 'resident' | 'ipv4') {
     const response = await this.axios.get(`/reference/list/${type}`);
 
     if (!response.data?.data?.items) {

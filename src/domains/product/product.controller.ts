@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CalcRequestDTO, CalcResidentRequestDTO } from './dto/request.dto';
 
@@ -9,6 +9,11 @@ export class ProductController {
   @Get('/references')
   async getReference() {
     return await this.productService.getProductReference();
+  }
+
+  @Get('/references/:type')
+  async getReferenceByType(@Param('type') type: string) {
+    return await this.productService.getProductReferenceByType(type);
   }
 
   @Post('/calc')

@@ -54,7 +54,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.generateTokens(user);
+    return await this.generateTokens(user);
   }
 
   async generateTokens(
@@ -72,7 +72,7 @@ export class AuthService {
     const payload: JwtPayload = { sub: user.id, email: user.email };
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
-      expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
+      expiresIn: '1h',
     });
   }
 
@@ -85,7 +85,7 @@ export class AuthService {
 
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
-      expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME'),
+      expiresIn: '7d',
     });
   }
 

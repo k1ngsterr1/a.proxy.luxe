@@ -12,7 +12,7 @@ export interface Period {
 export interface Quantity {
   id: string;
   name: string;
-  quantities: number[]
+  quantities: number[];
 }
 
 export interface TargetItem {
@@ -34,45 +34,44 @@ export interface Tariff {
 
 export interface ReferenceData {
   ipv4: {
-    country: Country[],
-    period: Period[],
-    target: Target[],
-
-  },
+    country: Country[];
+    period: Period[];
+    target: Target[];
+  };
   ipv6: {
-    country: Country[],
-    period: Period[],
-    target: Target[],
-  },
+    country: Country[];
+    period: Period[];
+    target: Target[];
+  };
   isp: {
-    country: Country[],
-    period: Period[],
-    target: Target[],
-  },
+    country: Country[];
+    period: Period[];
+    target: Target[];
+  };
   mobile: {
-    country: Country[],
-    period: Period[],
-  },
+    country: Country[];
+    period: Period[];
+  };
   mix: {
-    country: Country[],
-    period: Period[],
-    target: Target[],
-    quantities: Quantity[]
-  },
+    country: Country[];
+    period: Period[];
+    target: Target[];
+    quantities: Quantity[];
+  };
   mix_isp: {
-    country: Country[],
-    period: Period[],
-    target: Target[],
-    quantities: Quantity[]
-  },
+    country: Country[];
+    period: Period[];
+    target: Target[];
+    quantities: Quantity[];
+  };
   resident: {
-    tarifs: Tariff[],
-    target: Target[],
-  },
+    tarifs: Tariff[];
+    target: Target[];
+  };
   scraper: {
-    tarifs: Tariff[],
-    target: Target[],
-  },
+    tarifs: Tariff[];
+    target: Target[];
+  };
 }
 
 export interface ReferenceError {
@@ -82,7 +81,12 @@ export interface ReferenceError {
 }
 
 export interface ReferenceResponse {
-  status: "success" | "error";
+  status: 'success' | 'error';
   data: ReferenceData | null;
+  errors: ReferenceError[];
+}
+export interface ReferenceSingleResponse {
+  status: 'success' | 'error';
+  data: { items: { country: Country[]; period: Period[]; target: Target[] } };
   errors: ReferenceError[];
 }
