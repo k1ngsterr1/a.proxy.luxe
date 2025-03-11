@@ -5,10 +5,11 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { PaymentOrderDto } from './dto/payment-order.dto';
+import { FinishOrderDto } from './dto/payment-order.dto';
 import { PaymentGateway, PaymentStatus, ProxyType } from '@prisma/client';
 import { PrismaService } from '../shared/prisma.service';
 import { ProductService } from 'src/domains/product/product.service';
+import { OrderInfo } from 'src/domains/product/dto/order.dto';
 
 @Injectable()
 export class OrderService {
@@ -41,8 +42,8 @@ export class OrderService {
       if (!isValidCountry) {
         throw new HttpException('Invalid country', 400);
       }
-      const isValidPeriod = reference.period.some((period) =>
-        period.id.endsWith(createOrderDto.periodDays),
+      const isValidPeriod = reference.period.some(
+        (period) => period.id === createOrderDto.periodDays,
       );
       if (!isValidPeriod) {
         throw new HttpException('Invalid period', 400);
@@ -58,6 +59,7 @@ export class OrderService {
 
     return await this.prisma.order.create({
       data: {
+        type: createOrderDto.type,
         userId: createOrderDto.userId,
         country: createOrderDto.country,
         quantity: createOrderDto.quantity,
@@ -78,9 +80,9 @@ export class OrderService {
     });
   }
 
-  async processPayment(paymentDto: PaymentOrderDto) {
+  async finishOrder(paymentDto: FinishOrderDto) {
     const order = await this.prisma.order.findUnique({
-      where: { id: paymentDto.order_id },
+      where: { id: paymentDto.orderId },
     });
 
     if (!order) {
@@ -90,16 +92,30 @@ export class OrderService {
     if (order.status !== PaymentStatus.PENDING) {
       throw new BadRequestException('Order already processed');
     }
+    const reference = await this.productService.getProductReferenceByType(
+      order.type,
+    );
 
-    // Заглушка для интеграции с платежными системами
-    const paymentSuccess = this.mockPaymentGateway(paymentDto.gateway);
+    if (reference.status !== 'success') {
+      throw new HttpException(
+        reference.message || 'Invalid reference data',
+        400,
+      );
+    }
+    const orderInfo: OrderInfo = {
+      paymentId: 1,
+      tariffId: reference.tariffs?.find(
+        (tariff) => tariff.name === order.tariff,
+      )?.id,
+      countryId: reference.country?.find(
+        (country) => order.country && country.name.endsWith(order.country),
+      )?.id,
+      periodId: order.periodDays ? order.periodDays : undefined,
+      quantity: order.quantity ? order.quantity : undefined,
+      protocol: order.proxyType,
+    };
 
-    return this.prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: paymentSuccess ? PaymentStatus.PAID : PaymentStatus.CANCELED,
-      },
-    });
+    return await this.productService.placeOrder(orderInfo);
   }
 
   private mockPaymentGateway(gateway: PaymentGateway): boolean {

@@ -80,7 +80,8 @@ model Order {
   periodDays  String?
   tariff      String?
   proxyType   ProxyType     @default(HTTPS)
-  status      PaymentStatus @default(PENDING)
+  type        Proxy         
+  status      PaymentStatus @default(PENDING)  
   totalPrice  Decimal
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

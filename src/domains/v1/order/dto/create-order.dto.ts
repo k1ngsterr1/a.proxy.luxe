@@ -30,6 +30,10 @@ export class CreateOrderDto {
   @IsOptional()
   tariff: string;
 
+  @IsString()
+  @IsOptional()
+  protocol: string;
+
   @IsInt()
   totalPrice: number;
 

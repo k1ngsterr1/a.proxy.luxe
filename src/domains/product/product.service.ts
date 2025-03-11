@@ -16,6 +16,7 @@ import { CalcRequestDTO, CalcResidentRequestDTO } from './dto/request.dto';
 import { CalcResponse } from './rdo/calc.response';
 import { ActiveProxy, ActiveProxyType } from './rdo/get-active-proxy.rdo';
 import { Proxy } from '@prisma/client';
+import { OrderInfo } from './dto/order.dto';
 
 @Injectable()
 export class ProductService {
@@ -206,6 +207,17 @@ export class ProductService {
         status: 'error',
         message: 'Error fetching active proxy list',
       };
+    }
+  }
+
+  async placeOrder(orderInfo: OrderInfo) {
+    try {
+      const response = await this.proxySeller.post('/order/make', orderInfo);
+      console.log(response);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException('Failed to place an order', 500);
     }
   }
 }
