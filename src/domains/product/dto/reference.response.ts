@@ -24,7 +24,6 @@ export interface TargetItem {
 export interface Target {
   sectionId: string;
   name: string;
-  targets: TargetItem[];
 }
 
 export interface Tariff {
@@ -87,6 +86,13 @@ export interface ReferenceResponse {
 }
 export interface ReferenceSingleResponse {
   status: 'success' | 'error';
-  data: { items: { country: Country[]; period: Period[]; target: Target[] } };
+  data: {
+    items: {
+      country: Country[];
+      period: Period[];
+      target: Target[];
+      tarifs: Tariff[];
+    };
+  };
   errors: ReferenceError[];
 }

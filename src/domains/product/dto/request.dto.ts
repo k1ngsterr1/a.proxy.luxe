@@ -1,6 +1,17 @@
-import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
+import { Proxy } from '@prisma/client';
 
 export class CalcRequestDTO {
+  @IsEnum(Proxy)
+  type: Proxy;
+
   @IsInt()
   countryId: number;
 
@@ -14,14 +25,18 @@ export class CalcRequestDTO {
   @IsIn(['HTTPS', 'SOCKS5'], {
     message: 'Протокол должен быть HTTPS или SOCKS5',
   })
-  protocol: string;
+  @IsOptional()
+  protocol?: string;
 
   @IsOptional()
   @IsString()
   customTargetName: string;
 }
 
-export interface CalcResidentRequestDTO {
+export class CalcResidentRequestDTO {
+  @IsInt()
   tariffId: number;
-  quantity: number;
+
+  @IsString()
+  quantity: string;
 }

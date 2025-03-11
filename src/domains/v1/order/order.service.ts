@@ -16,28 +16,44 @@ export class OrderService {
     private readonly prisma: PrismaService,
     private productService: ProductService,
   ) {}
-
+  //need price check for feature
   async create(createOrderDto: CreateOrderDto) {
+    if (
+      createOrderDto.type === 'ipv6' &&
+      createOrderDto.proxyType === undefined
+    ) {
+      throw new HttpException('Not specified HTTPS or SOCKS5 for ipv6', 400);
+    }
     const reference = await this.productService.getProductReferenceByType(
       createOrderDto.type,
     );
+
     if (reference.status !== 'success') {
       throw new HttpException(
         reference.message || 'Invalid reference data',
         400,
       );
     }
-    const isValidCountry = reference.country.some((name) =>
-      name.text.endsWith(createOrderDto.country),
-    );
-    if (!isValidCountry) {
-      throw new HttpException('Invalid country', 400);
-    }
-    const isValidPeriod = reference.period.some((period) =>
-      period.id.endsWith(createOrderDto.periodDays),
-    );
-    if (!isValidPeriod) {
-      throw new HttpException('Invalid period', 400);
+    if (createOrderDto.type !== 'resident') {
+      const isValidCountry = reference.country.some((current) =>
+        current.name.endsWith(createOrderDto.country),
+      );
+      if (!isValidCountry) {
+        throw new HttpException('Invalid country', 400);
+      }
+      const isValidPeriod = reference.period.some((period) =>
+        period.id.endsWith(createOrderDto.periodDays),
+      );
+      if (!isValidPeriod) {
+        throw new HttpException('Invalid period', 400);
+      }
+    } else {
+      const isValidTariffs = reference.tariffs?.some(
+        (tariff) => tariff.name === createOrderDto.tariff,
+      );
+      if (!isValidTariffs) {
+        throw new HttpException('Invalid tariffs', 400);
+      }
     }
 
     return await this.prisma.order.create({
@@ -48,6 +64,7 @@ export class OrderService {
         periodDays: createOrderDto.periodDays,
         proxyType: createOrderDto.proxyType,
         status: PaymentStatus.PENDING,
+        tariff: createOrderDto.tariff,
         totalPrice: createOrderDto.totalPrice,
       },
     });

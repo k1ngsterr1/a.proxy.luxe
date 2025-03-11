@@ -14,19 +14,27 @@ export class CreateOrderDto {
   userId: string;
 
   @IsString()
+  @IsOptional()
   country: string;
 
   @IsInt()
   @IsPositive()
+  @IsOptional()
   quantity: number;
 
   @IsString()
+  @IsOptional()
   periodDays: string;
+
+  @IsString()
+  @IsOptional()
+  tariff: string;
 
   @IsInt()
   totalPrice: number;
 
   @IsEnum(ProxyType)
+  @IsOptional()
   proxyType: ProxyType;
 
   @IsEnum(Proxy)

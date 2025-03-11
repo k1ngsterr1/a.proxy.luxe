@@ -39,11 +39,10 @@ export class ProductService {
         message: 'Error accessing the service. Repeat the request later!',
       };
     }
-    console.log(response.data);
 
     const isp = reference.data.isp;
     const ipv6 = reference.data.ipv6;
-    const ipv4 = reference.data.ipv4;
+    const resident = reference.data.resident;
     const amounts = [
       {
         id: '1',
@@ -74,45 +73,26 @@ export class ProductService {
     return {
       status: 'success',
       isp: {
-        country: isp?.country.map((item) => ({
-          id: `${item.id}`,
-          text: `${item.name}`,
-        })),
-        targets: isp?.target.map((item) => ({
-          id: `${item.sectionId}`,
-          text: `${item.name}`,
-        })),
-        period: isp?.period.map((item) => ({
-          id: `${item.id}`,
-          text: `${item.name}`,
+        country: isp?.country,
+        period: isp?.period,
+        targets: isp?.target?.map(({ sectionId, name }) => ({
+          sectionId,
+          name,
         })),
       },
       ipv6: {
-        country: ipv6?.country.map((item) => ({
-          id: `${item.id}`,
-          text: `${item.name}`,
-        })),
-        targets: ipv6?.target.map((item) => ({
-          id: `${item.sectionId}`,
-          text: `${item.name}`,
-        })),
-        period: ipv6?.period.map((item) => ({
-          id: `${item.id}`,
-          text: `${item.name}`,
+        country: ipv6?.country,
+        period: ipv6?.period,
+        targets: ipv6?.target?.map(({ sectionId, name }) => ({
+          sectionId,
+          name,
         })),
       },
-      ipv4: {
-        country: ipv4?.country.map((item) => ({
-          id: `${item.id}`,
-          text: `${item.name}`,
-        })),
-        targets: ipv4?.target.map((item) => ({
-          id: `${item.sectionId}`,
-          text: `${item.name}`,
-        })),
-        period: ipv4?.period.map((item) => ({
-          id: `${item.id}`,
-          text: `${item.name}`,
+      resident: {
+        tariffs: resident?.tarifs,
+        targets: resident?.target?.map(({ sectionId, name }) => ({
+          sectionId,
+          name,
         })),
       },
       amounts: amounts,
@@ -135,10 +115,6 @@ export class ProductService {
       };
     }
     const amounts = [
-      {
-        id: '1',
-        text: '1 шт',
-      },
       {
         id: '10',
         text: '10 шт',
@@ -163,54 +139,35 @@ export class ProductService {
 
     return {
       status: 'success',
-      country: reference?.data.items.country.map((item) => ({
-        id: `${item.id}`,
-        text: `${item.name}`,
+      country: reference?.data.items.country,
+      targets: reference?.data.items.target.map(({ sectionId, name }) => ({
+        sectionId,
+        name,
       })),
-      targets: reference?.data.items.target.map((item) => ({
-        id: `${item.sectionId}`,
-        text: `${item.name}`,
-      })),
-      period: reference?.data.items.period.map((item) => ({
-        id: `${item.id}`,
-        text: `${item.name}`,
-      })),
-      amounts: amounts,
+      period: reference?.data.items.period,
+      tariffs: reference?.data.items.tarifs,
+      amounts: type !== 'resident' ? amounts : undefined,
     };
   }
 
   async getCalc(
     query: CalcRequestDTO,
   ): Promise<ResponseCalcDTO | ResponseErrorDTO> {
-    const request: CalcRequest = {
-      countryId: query.countryId,
-      periodId: query.periodId,
-      quantity: query.quantity,
-      paymentId: 1,
-      customTargetName: query.customTargetName,
-    };
-
-    if (query.protocol) {
-      request.protocol = query.protocol;
+    if (query.type === 'resident') {
+      throw new HttpException('Invalid type! Use other route', 400);
     }
 
-    const response: AxiosResponse<CalcResponse> = await this.proxySeller.post(
-      '/order/calc',
-      request,
-    );
-    console.log(response.data);
-
-    const calc = response.data;
-
-    if (!calc.data) {
-      return {
-        status: 'error',
-        message: 'Error accessing the service. Repeat the request later!',
-        error: calc.errors[0].message,
-      };
+    if (query.type === 'ipv6' && query.protocol === undefined) {
+      throw new HttpException('Invalid protocol for ipv6', 400);
+    }
+    if (query.type === 'ipv6' && query.quantity < 10) {
+      throw new HttpException(
+        'Number of proxies for ipv6 must be at least 10',
+        400,
+      );
     }
 
-    const price = calc.data.price * 1.5;
+    const price = query.type === 'ipv6' ? 0.1 : 2.4;
     const totalPrice = price * query.quantity;
 
     return {
@@ -223,26 +180,8 @@ export class ProductService {
   async getCalcResident(
     query: CalcResidentRequestDTO,
   ): Promise<ResponseCalcDTO | ResponseErrorDTO> {
-    const request: CalcResidentRequest = {
-      coupon: '',
-      paymentId: 1,
-      tarifId: query.tariffId,
-    };
-    const response: AxiosResponse<CalcResponse> = await this.proxySeller.post(
-      '/order/calc',
-      request,
-    );
-    const calc = response.data;
-    console.log(calc);
-    if (!calc.data) {
-      return {
-        status: 'error',
-        message: 'Error accessing the service. Repeat the request later!',
-      };
-    }
-
-    const price = calc.data.price * 1.5;
-    const totalPrice = price * query.quantity;
+    const price = 2.4;
+    const totalPrice = price * parseInt(query.quantity);
 
     return {
       status: 'success',

@@ -3,6 +3,7 @@ export interface CalcRequest {
   countryId: number;
   periodId: string;
   coupon?: string;
+  tariffId?: string;
   paymentId: number;
   quantity: number;
   authorization?: string;

@@ -20,8 +20,8 @@ enum ProxyType {
 
 enum Proxy {
   ipv6
-  ipv4
   isp
+  resident
 }
 
 enum PaymentStatus {
@@ -75,9 +75,10 @@ model Order {
   id          String        @id @default(uuid())
   userId      String
   user        User          @relation(fields: [userId], references: [id])
-  country     String
-  quantity    Int
-  periodDays  String
+  country     String?
+  quantity    Int?
+  periodDays  String?
+  tariff      String?
   proxyType   ProxyType     @default(HTTPS)
   status      PaymentStatus @default(PENDING)
   totalPrice  Decimal

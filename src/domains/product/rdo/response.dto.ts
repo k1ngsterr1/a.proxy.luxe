@@ -1,34 +1,34 @@
+import { Country, Period, Target, Tariff } from '../dto/reference.response';
 interface Option {
   id: string;
   text: string;
 }
-
 export interface ResponseReferenceDTO {
   status: 'success';
   isp: {
-    country: Option[];
-    period: Option[];
-    targets: Option[];
+    country: Country[];
+    period: Period[];
+    targets: Target[];
   };
   ipv6: {
-    country: Option[];
-    period: Option[];
-    targets: Option[];
+    country: Country[];
+    period: Period[];
+    targets: Target[];
   };
-  ipv4: {
-    country: Option[];
-    period: Option[];
-    targets: Option[];
+  resident: {
+    targets: Target[];
+    tariffs: Tariff[];
   };
   amounts: Option[];
 }
 
 export interface ResponseReferenceSingleDTO {
   status: 'success';
-  country: Option[];
-  period: Option[];
-  targets: Option[];
-  amounts: Option[];
+  country: Country[];
+  period: Period[];
+  targets: Target[];
+  tariffs?: Tariff[];
+  amounts?: Option[];
 }
 export interface ResponseReferenceSignleDTO {
   status: 'success';
