@@ -8,6 +8,7 @@ import {
   HttpStatus,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { OrderService } from './order.service';
@@ -16,21 +17,32 @@ import { FinishOrderDto } from './dto/payment-order.dto';
 import { OrderDto } from './dto/order.dto';
 import { AuthGuard } from '@nestjs/passport';
 
-@ApiTags('Orders')
 @Controller('v1/orders')
+@UseGuards(AuthGuard('jwt'))
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
   async create(@Body() createOrderDto: CreateOrderDto, @Request() request) {
     createOrderDto.userId = request.user.id;
     return await this.orderService.create(createOrderDto);
   }
 
   @Get()
-  findAll() {
-    return this.orderService.findAll();
+  findAll(
+    @Request() request,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+
+    return this.orderService.findAll(request.user.id, pageNumber, limitNumber);
+  }
+
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    return this.orderService.findById(id);
   }
 
   @Post('finish')

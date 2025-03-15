@@ -85,12 +85,38 @@ export class OrderService {
     });
   }
 
-  async findAll() {
-    return this.prisma.order.findMany({
-      include: {
-        user: true,
-      },
+  async findAll(userId: string, page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const orders = await this.prisma.order.findMany({
+      where: { userId: userId, status: 'PENDING' },
+      skip: skip,
+      take: limit,
     });
+
+    const total = await this.prisma.order.count({
+      where: { userId: userId, status: 'PENDING' },
+    });
+
+    return {
+      data: orders,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async findById(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new HttpException(`Order with ID ${orderId} not found`, 404);
+    }
+
+    return order;
   }
 
   async finishOrder(paymentDto: FinishOrderDto) {
