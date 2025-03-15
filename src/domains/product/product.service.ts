@@ -23,8 +23,9 @@ export class ProductService {
   private readonly proxySeller: Axios;
 
   constructor(private readonly configService: ConfigService) {
-    axios.defaults.baseURL = `https://proxy-seller.com/personal/api/v1/${configService.get<string>('PROXY_SELLER')}`;
-    this.proxySeller = axios;
+    this.proxySeller = axios.create({
+      baseURL: `https://proxy-seller.com/personal/api/v1/${configService.get<string>('PROXY_SELLER')}`,
+    });
   }
 
   async getProductReference(): Promise<
@@ -189,6 +190,20 @@ export class ProductService {
       price: parseFloat(price.toFixed(2)),
       totalPrice: parseFloat(totalPrice.toFixed(2)),
     };
+  }
+
+  async getCalcForOrder(type: Proxy, quantity: number): Promise<number> {
+    if (type === 'resident') {
+      const price = 2.4;
+      const totalPrice = price * quantity;
+
+      return totalPrice;
+    } else {
+      const price = type === 'ipv6' ? 0.1 : 2.4;
+      const totalPrice = price * quantity;
+
+      return totalPrice;
+    }
   }
 
   async getActiveProxyList(type: string | undefined) {

@@ -17,8 +17,13 @@ export class OrderService {
     private readonly prisma: PrismaService,
     private productService: ProductService,
   ) {}
-  //need price check for feature
   async create(createOrderDto: CreateOrderDto) {
+    if (
+      createOrderDto.type !== 'resident' &&
+      createOrderDto.quantity === undefined
+    ) {
+      throw new HttpException('Invalid quantity', 400);
+    }
     if (
       createOrderDto.type === 'ipv6' &&
       createOrderDto.proxyType === undefined
@@ -56,6 +61,14 @@ export class OrderService {
         throw new HttpException('Invalid tariffs', 400);
       }
     }
+    if (createOrderDto.type === 'resident') {
+      createOrderDto.quantity = 1;
+    }
+
+    const totalPrice = await this.productService.getCalcForOrder(
+      createOrderDto.type,
+      createOrderDto.quantity,
+    );
 
     return await this.prisma.order.create({
       data: {
@@ -67,7 +80,7 @@ export class OrderService {
         proxyType: createOrderDto.proxyType,
         status: PaymentStatus.PENDING,
         tariff: createOrderDto.tariff,
-        totalPrice: createOrderDto.totalPrice,
+        totalPrice: totalPrice,
       },
     });
   }

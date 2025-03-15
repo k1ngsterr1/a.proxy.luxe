@@ -7,7 +7,7 @@ import { OrderModule } from './v1/order/order.module';
 import { CategoryModule } from './v1/articles/category/category.module';
 import { ArticleModule } from './v1/articles/article/article.module';
 import { ServicesModule } from './v1/services/services.module';
-import { BuyModule } from './v1/buy/buy.module';
+import { PaymentModule } from './v1/payment/payment.module';
 import { SharedModule } from './v1/shared/shared.module';
 
 @Module({
@@ -24,7 +24,7 @@ import { SharedModule } from './v1/shared/shared.module';
     CategoryModule,
     ArticleModule,
     ServicesModule,
-    BuyModule,
+    PaymentModule,
     SharedModule,
   ],
 })

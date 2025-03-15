@@ -34,9 +34,6 @@ export class CreateOrderDto {
   @IsOptional()
   protocol: string;
 
-  @IsInt()
-  totalPrice: number;
-
   @IsEnum(ProxyType)
   @IsOptional()
   proxyType: ProxyType;
