@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { Axios } from 'axios';
 import * as crypto from 'crypto';
+import { PrismaService } from '../shared/prisma.service';
 
 @Injectable()
 export class PaymentService {
@@ -12,7 +13,10 @@ export class PaymentService {
   private readonly merchant_id: string;
   private readonly merchant_pass: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     this.payeer = axios.create({
       baseURL: 'https://payeer.com/ajax/api/api.php',
     });
@@ -52,5 +56,12 @@ export class PaymentService {
     });
 
     return response.data.url;
+  }
+
+  async successfulPayment(userId: string, amount: number) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { balance: { increment: amount } },
+    });
   }
 }
