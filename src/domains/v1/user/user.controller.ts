@@ -14,6 +14,7 @@ export class UserController {
 
     return {
       email: user.email,
+      balance: user.balance,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
