@@ -1,4 +1,11 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Request,
+  Post,
+  Body,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
@@ -15,8 +22,19 @@ export class UserController {
     return {
       email: user.email,
       balance: user.balance,
+      isVerified: user.isVerified,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  @Post('send-verification')
+  async sendVerificationEmail(@Request() request) {
+    return this.userService.sendVerificationEmail(request.user.email);
+  }
+
+  @Post('verify')
+  async verifyCode(@Body() data: { code: string }, @Request() request) {
+    return this.userService.setVerify(request.user, data.code);
   }
 }
