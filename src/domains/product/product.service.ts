@@ -17,12 +17,16 @@ import { CalcResponse } from './rdo/calc.response';
 import { ActiveProxy, ActiveProxyType } from './rdo/get-active-proxy.rdo';
 import { Proxy } from '@prisma/client';
 import { OrderInfo } from './dto/order.dto';
+import { PrismaService } from '../v1/shared/prisma.service';
 
 @Injectable()
 export class ProductService {
   private readonly proxySeller: Axios;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     this.proxySeller = axios.create({
       baseURL: `https://proxy-seller.com/personal/api/v1/${configService.get<string>('PROXY_SELLER')}`,
     });
@@ -206,16 +210,39 @@ export class ProductService {
     }
   }
 
-  async getActiveProxyList(type: string | undefined) {
+  async getActiveProxyList(userId: string, type: string | undefined) {
     if (type && !Object.keys(ActiveProxyType).includes(type)) {
       throw new HttpException('Invalid proxy type', 400);
     }
     try {
-      const response: AxiosResponse<ActiveProxy[]> = await this.proxySeller.get(
+      const orders = await this.prisma.order.findMany({
+        where: { userId: userId, proxySellerId: { not: null } },
+        select: { proxySellerId: true },
+      });
+
+      const proxySellerIds = new Set(
+        orders.map((order) => order.proxySellerId?.toString()),
+      );
+
+      const response: AxiosResponse<ActiveProxy> = await this.proxySeller.get(
         `/proxy/list${type ? `/${type}` : ''}`,
       );
 
-      return response.data;
+      if (response.data.status !== 'success' || !response.data.data?.items) {
+        return {
+          status: 'error',
+          message: 'Invalid response from proxy provider',
+        };
+      }
+
+      const filteredItems = response.data.data.items.filter((item) =>
+        proxySellerIds.has(item.order_id),
+      );
+
+      return {
+        status: 'success',
+        data: { items: filteredItems },
+      };
     } catch (error) {
       console.error('Error fetching active proxy list:', error);
       return {
@@ -228,8 +255,7 @@ export class ProductService {
   async placeOrder(orderInfo: OrderInfo) {
     try {
       const response = await this.proxySeller.post('/order/make', orderInfo);
-      console.log(response.data);
-      return response.data;
+      return response.data.data.orderId;
     } catch (error) {
       console.log(error);
       throw new HttpException('Failed to place an order', 500);

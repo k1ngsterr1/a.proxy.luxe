@@ -1,13 +1,7 @@
 export interface ActiveProxy {
   status: 'success';
   data: {
-    ipv4: [];
-    ipv6: [];
-    mobile: [];
-    isp: [];
-    mix: [];
-    mix_isp: [];
-    resident: [];
+    items: any[];
   };
   errors: [];
 }

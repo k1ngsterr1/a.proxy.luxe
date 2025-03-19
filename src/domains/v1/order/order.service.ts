@@ -6,10 +6,11 @@ import {
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FinishOrderDto } from './dto/payment-order.dto';
-import { PaymentGateway, PaymentStatus, ProxyType } from '@prisma/client';
+import { PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../shared/prisma.service';
 import { ProductService } from 'src/domains/product/product.service';
 import { OrderInfo } from 'src/domains/product/dto/order.dto';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class OrderService {
@@ -131,6 +132,19 @@ export class OrderService {
     if (order.status !== PaymentStatus.PENDING) {
       throw new BadRequestException('Order already processed');
     }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: order.userId },
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+
+    if (new Decimal(user.balance).lt(order.totalPrice)) {
+      throw new HttpException('Insufficient balance', 400);
+    }
+
     const reference = await this.productService.getProductReferenceByType(
       order.type,
     );
@@ -154,12 +168,17 @@ export class OrderService {
       protocol: order.proxyType ? order.proxyType : undefined,
     };
 
-    return await this.productService.placeOrder(orderInfo);
-  }
+    const placedOrder = await this.productService.placeOrder(orderInfo);
 
-  private mockPaymentGateway(gateway: PaymentGateway): boolean {
-    // Реальная интеграция с платежными шлюзами
-    console.log(`Processing payment via ${gateway}`);
-    return true; // Всегда успешная оплата для примера
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { proxySellerId: placedOrder },
+    });
+    await this.prisma.user.update({
+      where: { id: order.id },
+      data: { balance: { increment: -order.totalPrice } },
+    });
+
+    return { message: 'Successfully finished order' };
   }
 }

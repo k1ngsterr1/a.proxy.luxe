@@ -1,6 +1,16 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CalcRequestDTO, CalcResidentRequestDTO } from './dto/request.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('/v1/products')
 export class ProductController {
@@ -27,7 +37,8 @@ export class ProductController {
   }
 
   @Get('active-list')
-  async getActiveProxyList(@Query('type') type: string) {
-    return await this.productService.getActiveProxyList(type);
+  @UseGuards(AuthGuard('jwt'))
+  async getActiveProxyList(@Query('type') type: string, @Request() req) {
+    return await this.productService.getActiveProxyList(req.user.id, type);
   }
 }
