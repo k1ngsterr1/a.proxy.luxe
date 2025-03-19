@@ -228,7 +228,7 @@ export class ProductService {
   async placeOrder(orderInfo: OrderInfo) {
     try {
       const response = await this.proxySeller.post('/order/make', orderInfo);
-      console.log(response);
+      console.log(response.data);
       return response.data;
     } catch (error) {
       console.log(error);

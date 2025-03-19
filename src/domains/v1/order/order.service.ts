@@ -143,15 +143,15 @@ export class OrderService {
     }
     const orderInfo: OrderInfo = {
       paymentId: 1,
-      tariffId: reference.tariffs?.find(
-        (tariff) => tariff.name === order.tariff,
-      )?.id,
+      tarifId: reference.tariffs?.find((tariff) => tariff.name === order.tariff)
+        ?.id,
       countryId: reference.country?.find(
         (country) => order.country && country.name.endsWith(order.country),
       )?.id,
+      customTargetName: 'Proxy for proxy.luxe buyers',
       periodId: order.periodDays ? order.periodDays : undefined,
       quantity: order.quantity ? order.quantity : undefined,
-      protocol: order.proxyType,
+      protocol: order.proxyType ? order.proxyType : undefined,
     };
 
     return await this.productService.placeOrder(orderInfo);
