@@ -34,6 +34,7 @@ export class OrderService {
     const reference = await this.productService.getProductReferenceByType(
       createOrderDto.type,
     );
+    console.log('my log', reference);
 
     if (reference.status !== 'success') {
       throw new HttpException(
@@ -172,10 +173,10 @@ export class OrderService {
 
     await this.prisma.order.update({
       where: { id: order.id },
-      data: { proxySellerId: placedOrder },
+      data: { proxySellerId: placedOrder, status: 'PAID' },
     });
     await this.prisma.user.update({
-      where: { id: order.id },
+      where: { id: order.userId },
       data: { balance: { increment: -order.totalPrice } },
     });
 

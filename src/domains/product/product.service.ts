@@ -223,17 +223,17 @@ export class ProductService {
       const proxySellerIds = new Set(
         orders.map((order) => order.proxySellerId?.toString()),
       );
-
+      console.log(`/proxy/list/${type ? `${type}` : ''}`);
       const response: AxiosResponse<ActiveProxy> = await this.proxySeller.get(
         `/proxy/list${type ? `/${type}` : ''}`,
       );
-
       if (response.data.status !== 'success' || !response.data.data?.items) {
         return {
           status: 'error',
           message: 'Invalid response from proxy provider',
         };
       }
+      console.log(response.data.data.items);
 
       const filteredItems = response.data.data.items.filter((item) =>
         proxySellerIds.has(item.order_id),
