@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../shared/prisma.service';
 import { User } from '@prisma/client';
+import { UserService } from '../user/user.service';
 
 interface JwtPayload {
   sub: string;
@@ -26,6 +27,7 @@ interface JwtRefreshTokenPayload {
 export class AuthService {
   constructor(
     private prisma: PrismaService,
+    private userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -41,12 +43,16 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    return this.prisma.user.create({
+    const current_user = await this.prisma.user.create({
       data: {
         ...userDetails,
         password: hashedPassword,
       },
     });
+
+    await this.userService.sendVerificationEmail(registerDto.email);
+
+    return current_user;
   }
 
   async login(
