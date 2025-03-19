@@ -7,8 +7,14 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.enableCors({
     origin: ['http://localhost:3000', 'https://proxy.luxe'],
-    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+    ],
     credentials: true,
   });
 
