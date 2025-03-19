@@ -34,7 +34,6 @@ export class OrderService {
     const reference = await this.productService.getProductReferenceByType(
       createOrderDto.type,
     );
-    console.log('my log', reference);
 
     if (reference.status !== 'success') {
       throw new HttpException(
