@@ -36,9 +36,9 @@ export class ProductController {
     return await this.productService.getCalcResident(body);
   }
 
-  @Get('active-list')
+  @Get('active-list/:type')
   @UseGuards(AuthGuard('jwt'))
-  async getActiveProxyList(@Query('type') type: string, @Request() req) {
+  async getActiveProxyList(@Param('type') type: string, @Request() req) {
     return await this.productService.getActiveProxyList(req.user.id, type);
   }
 }

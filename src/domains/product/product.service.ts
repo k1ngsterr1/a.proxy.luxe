@@ -210,8 +210,8 @@ export class ProductService {
     }
   }
 
-  async getActiveProxyList(userId: string, type: string | undefined) {
-    if (type && !Object.keys(ActiveProxyType).includes(type)) {
+  async getActiveProxyList(userId: string, type: string) {
+    if (type === undefined || !Object.keys(ActiveProxyType).includes(type)) {
       throw new HttpException('Invalid proxy type', 400);
     }
     try {
@@ -223,19 +223,19 @@ export class ProductService {
       const proxySellerIds = new Set(
         orders.map((order) => order.proxySellerId?.toString()),
       );
-      const response: AxiosResponse<ActiveProxy> = await this.proxySeller.get(
-        `/proxy/list${type ? `/${type}` : ''}`,
-      );
-      if (response.data.status !== 'success' || !response.data.data?.items) {
+      const response: AxiosResponse<ActiveProxy> =
+        await this.proxySeller.get(`/proxy/list/type`);
+      if (response.data.status !== 'success') {
         return {
           status: 'error',
           message: 'Invalid response from proxy provider',
         };
       }
 
-      const filteredItems = response.data.data.items.filter((item) =>
-        proxySellerIds.has(item.order_id),
-      );
+      const filteredItems =
+        response.data.data.items?.filter((item) =>
+          proxySellerIds.has(item.order_id),
+        ) ?? [];
 
       return {
         status: 'success',
