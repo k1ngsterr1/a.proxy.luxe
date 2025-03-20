@@ -223,8 +223,9 @@ export class ProductService {
       const proxySellerIds = new Set(
         orders.map((order) => order.proxySellerId?.toString()),
       );
-      const response: AxiosResponse<ActiveProxy> =
-        await this.proxySeller.get(`/proxy/list/type`);
+      const response: AxiosResponse<ActiveProxy> = await this.proxySeller.get(
+        `/proxy/list/${type}`,
+      );
       if (response.data.status !== 'success') {
         return {
           status: 'error',
