@@ -161,7 +161,15 @@ export class UserService {
     return { message: 'Check email' };
   }
 
-  async setVerify(user: User, code: string): Promise<any> {
+  async setVerify(email: string, code: string): Promise<any> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: email },
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', 404);
+    }
+
     if (user.verification_code !== code) {
       throw new HttpException('Verification code is incorrect', 400);
     }

@@ -11,11 +11,11 @@ import { UserService } from './user.service';
 import { User } from '@prisma/client';
 
 @Controller('v1/user')
-@UseGuards(AuthGuard('jwt'))
 export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('me')
+  @UseGuards(AuthGuard('jwt'))
   async me(@Request() request) {
     const user = request.user as User;
 
@@ -29,12 +29,13 @@ export class UserController {
   }
 
   @Post('send-verification')
+  @UseGuards(AuthGuard('jwt'))
   async sendVerificationEmail(@Request() request) {
     return this.userService.sendVerificationEmail(request.user.email);
   }
 
   @Post('verify')
-  async verifyCode(@Body() data: { code: string }, @Request() request) {
-    return this.userService.setVerify(request.user, data.code);
+  async verifyCode(@Body() data: { code: string; email: string }) {
+    return this.userService.setVerify(data.email, data.code);
   }
 }
