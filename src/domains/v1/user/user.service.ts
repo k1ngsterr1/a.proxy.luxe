@@ -67,7 +67,7 @@ export class UserService {
                                                 <table border="0" cellpadding="0" cellspacing="0">
                                                     <tr>
                                                         <td align="center" style="display: flex; align-items: center; justify-content: center;">
-                                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #f3d675 0%, #e6b325 100%); display: inline-block; text-align: center; line-height: 40px; color: #000000; font-weight: bold; font-size: 16px; margin-right: 10px;">PL</div>
+                                                            <img src="https://iili.io/3zxnwpn.th.png" width="30px" height="30px" style="margin-right: 8px">
                                                             <div style="font-size: 24px; font-weight: bold; color: #f3d675; letter-spacing: 1px;">PROXY.LUXE</div>
                                                         </td>
                                                     </tr>
@@ -77,7 +77,6 @@ export class UserService {
                                     </table>
                                 </td>
                             </tr>
-                            
                             <!-- Content -->
                             <tr>
                                 <td style="padding: 40px 30px; background-color: #000000; color: #ffffff;">
@@ -119,7 +118,7 @@ export class UserService {
                                         </tr>
                                         <tr>
                                             <td style="color: #999999; font-size: 12px; text-align: center; line-height: 18px;">
-                                                Если у вас возникли вопросы, пожалуйста, свяжитесь с нами по адресу <a href="mailto:support@proxy.luxe" style="color: #f3d675; text-decoration: none;">support@proxy.luxe</a>
+                                                Если у вас возникли вопросы, пожалуйста, свяжитесь с нами по адресу <a href="mailto:admin@proxy.luxe" style="color: #f3d675; text-decoration: none;">admin@proxy.luxe</a>
                                             </td>
                                         </tr>
                                     </table>
