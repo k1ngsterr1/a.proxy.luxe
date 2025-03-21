@@ -1,8 +1,8 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { Axios } from 'axios';
-import * as crypto from 'crypto';
 import { PrismaService } from '../shared/prisma.service';
+import { Payment } from '@prisma/client';
 
 @Injectable()
 export class PaymentService {
@@ -63,5 +63,19 @@ export class PaymentService {
       where: { id: userId },
       data: { balance: { increment: amount } },
     });
+
+    return await this.prisma.payment.create({
+      data: { userId: userId, price: amount },
+    });
+  }
+
+  async getPaymentHistory(userId: string): Promise<Payment[]> {
+    const payments = await this.prisma.payment.findMany({
+      where: { userId: userId },
+    });
+    if (!payments) {
+      throw new HttpException('History not found', 404);
+    }
+    return payments;
   }
 }

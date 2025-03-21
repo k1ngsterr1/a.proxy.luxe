@@ -53,6 +53,7 @@ model User {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   orders     Order[]
+  payments   Payment[]
 }
 
 model Category {
@@ -74,7 +75,6 @@ model Article {
   category       Category @relation(fields: [categoryId], references: [id])
 }
 
-
 model Order {
   id            String        @id @default(uuid())
   userId        String
@@ -90,4 +90,13 @@ model Order {
   proxySellerId Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  price           Decimal
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }

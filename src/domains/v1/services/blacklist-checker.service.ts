@@ -38,7 +38,6 @@ export class BlacklistCheckerService {
 
     try {
       const response = await this.dns.resolveA(query);
-      console.log(response);
       const isListed = response.answers.some((ans) =>
         ans.address.startsWith('127.'),
       );

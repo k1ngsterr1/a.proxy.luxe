@@ -6,10 +6,14 @@ import {
   Response,
   Request,
   ParseFloatPipe,
+  Get,
+  Param,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
 import * as crypto from 'crypto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('v1/payment')
 export class PaymentController {
@@ -89,5 +93,11 @@ export class PaymentController {
     return res
       .status(200)
       .send({ message: 'Payment successful', userId, amount });
+  }
+
+  @Get('history')
+  @UseGuards(AuthGuard('jwt'))
+  async getPaymentHistory(@Request() request) {
+    return await this.paymentService.getPaymentHistory(request.user.id);
   }
 }
