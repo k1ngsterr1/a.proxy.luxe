@@ -9,7 +9,7 @@ export class PortCheckerService {
     const socket = new Socket();
 
     return new Promise((resolve) => {
-      const timeout = 5000; // 5 секунд таймаут
+      const timeout = 5000;
       let status = 'closed';
 
       socket.setTimeout(timeout);

@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  Injectable,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import axios, { Axios, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -23,9 +18,8 @@ import { OrderInfo } from './dto/order.dto';
 import { PrismaService } from '../v1/shared/prisma.service';
 
 @Injectable()
-export class ProductService implements OnModuleInit {
+export class ProductService {
   private readonly proxySeller: Axios;
-  private readonly logger = new Logger(ProductService.name);
 
   constructor(
     private readonly configService: ConfigService,
@@ -34,25 +28,6 @@ export class ProductService implements OnModuleInit {
     this.proxySeller = axios.create({
       baseURL: `https://proxy-seller.com/personal/api/v1/${configService.get<string>('PROXY_SELLER')}`,
     });
-  }
-
-  async onModuleInit() {
-    try {
-      this.logger.log('Fetching product reference on startup...');
-      const reference = await this.getProductReference();
-      this.logger.log('Product reference fetched successfully', reference);
-    } catch (error) {
-      this.logger.error('Failed to fetch product reference', error);
-
-      try {
-        const ipResponse = await axios.get(
-          'https://api64.ipify.org?format=json',
-        );
-        this.logger.error(`Request failed from IP: ${ipResponse.data.ip}`);
-      } catch (ipError) {
-        this.logger.error('Failed to fetch server IP', ipError);
-      }
-    }
   }
 
   async getProductReference(): Promise<
@@ -257,9 +232,15 @@ export class ProductService implements OnModuleInit {
       }
 
       const filteredItems =
-        response.data.data.items?.filter((item) =>
-          proxySellerIds.has(item.order_id),
-        ) ?? [];
+        response.data.data.items
+          ?.filter((item) => proxySellerIds.has(item.order_id))
+          ?.map(({ ip, protocol, port_socks, port_http, country }) => ({
+            ip,
+            protocol,
+            port_socks,
+            port_http,
+            country,
+          })) ?? [];
 
       return {
         status: 'success',

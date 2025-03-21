@@ -179,6 +179,10 @@ export class OrderService {
       data: { balance: { increment: -order.totalPrice } },
     });
 
-    return { message: 'Successfully finished order' };
+    return {
+      message: 'Successfully finished order',
+      type: order.type,
+      orderId: order.id,
+    };
   }
 }

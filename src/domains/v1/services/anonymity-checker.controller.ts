@@ -12,15 +12,6 @@ export class AnonymityCheckerController {
   ) {}
 
   @Get('check')
-  @ApiOperation({
-    summary: 'Проверить уровень анонимности',
-    description: 'Проверяет насколько анонимен пользователь в сети',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Результат проверки анонимности',
-    type: AnonymityCheckDto,
-  })
   async checkAnonymity(@Req() req: Request): Promise<AnonymityCheckDto> {
     return this.anonymityCheckerService.checkAnonymity(req);
   }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
+import * as DNS from 'dns2';
 import { BlacklistResultDto } from './dto/blacklist-result.dto';
 
 @Injectable()
@@ -8,8 +8,9 @@ export class BlacklistCheckerService {
     'zen.spamhaus.org',
     'b.barracudacentral.org',
     'bl.spamcop.net',
-    // Добавьте другие списки
   ];
+
+  private readonly dns = new DNS({ dns: '8.8.8.8' });
 
   async checkIp(ip: string): Promise<BlacklistResultDto> {
     const results = await Promise.all(
@@ -18,12 +19,12 @@ export class BlacklistCheckerService {
       ),
     );
 
-    const blacklists = results.filter((result) => result.isListed);
+    const blacklists = results.filter((r) => r.isListed);
 
     return {
       ip,
       isListed: blacklists.length > 0,
-      blacklists: blacklists.map((b) => b.provider),
+      blacklists: blacklists.map((r) => r.provider),
       blacklistCount: blacklists.length,
       timestamp: new Date().toISOString(),
     };
@@ -33,20 +34,17 @@ export class BlacklistCheckerService {
     ip: string,
     provider: string,
   ): Promise<{ provider: string; isListed: boolean }> {
-    try {
-      const reversedIp = ip.split('.').reverse().join('.');
-      const lookupAddress = `${reversedIp}.${provider}`;
+    const query = `${ip.split('.').reverse().join('.')}.${provider}`;
 
-      const response = await axios.get(`http://${lookupAddress}`);
-      return {
-        provider,
-        isListed: response.status === 200,
-      };
-    } catch (error) {
-      return {
-        provider,
-        isListed: false,
-      };
+    try {
+      const response = await this.dns.resolveA(query);
+      console.log(response);
+      const isListed = response.answers.some((ans) =>
+        ans.address.startsWith('127.'),
+      );
+      return { provider, isListed };
+    } catch (err) {
+      return { provider, isListed: false };
     }
   }
 }
