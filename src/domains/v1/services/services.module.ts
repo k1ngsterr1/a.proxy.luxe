@@ -9,9 +9,11 @@ import { WhoisService } from './whois.service';
 import { WhoisController } from './whois.controller';
 import { BlacklistCheckerService } from './blacklist-checker.service';
 import { BlacklistCheckerController } from './blacklist-checker.controller';
+import { Ipv6Controller } from './ipv6.controller';
+import { Ipv6Service } from './ipv6.service';
 
 @Module({
-  providers: [IpService, PortCheckerService, AnonymityCheckerService, WhoisService, BlacklistCheckerService],
-  controllers: [IpController, PortCheckerController, AnonymityCheckerController, WhoisController, BlacklistCheckerController]
+  providers: [IpService, PortCheckerService, AnonymityCheckerService, WhoisService, BlacklistCheckerService, Ipv6Service],
+  controllers: [IpController, PortCheckerController, AnonymityCheckerController, WhoisController, BlacklistCheckerController, Ipv6Controller]
 })
 export class ServicesModule {}
