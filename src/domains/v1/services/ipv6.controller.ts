@@ -1,4 +1,3 @@
-// src/ipv6/ipv6.controller.ts
 import { Controller, Post, Body } from '@nestjs/common';
 import { Ipv6Service } from './ipv6.service';
 import { Ipv6CheckDto, Ipv6ResultDto } from './dto/ipv6-support.dto';

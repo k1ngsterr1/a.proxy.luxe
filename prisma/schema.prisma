@@ -30,30 +30,27 @@ enum PaymentStatus {
   CANCELED
 }
 
-enum PaymentGateway {
-  CARD
-  WMZ
-  BTC
-  LTC
-  DOGE
-  QIWI
-  PAYEER
-  ENOT
-  PERFECT_MONEY
+enum UserType {
+  ADMIN
+  USER
 }
 
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  password   String
-  balance    Decimal  @default(0)
-  isVerified Boolean  @default(false)
-  verification_code String?
-  change_passwor_code String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  orders     Order[]
-  payments   Payment[]
+  id                    String   @id @default(uuid())
+  type                  UserType @default(USER)
+  email                 String   @unique
+  password              String
+  balance               Decimal  @default(0)
+  isVerified            Boolean  @default(false)
+  ip                    String   @default("0.0.0.0")
+  isBanned              Boolean  @default(false)
+  goal                  String
+  verification_code     String?
+  change_passwor_code   String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  orders                Order[]
+  payments              Payment[]
 }
 
 model Category {

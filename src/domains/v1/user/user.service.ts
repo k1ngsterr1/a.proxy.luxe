@@ -1,7 +1,11 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../shared/prisma.service';
 import * as nodemailer from 'nodemailer';
-import { User } from '@prisma/client';
+import { User, UserType } from '@prisma/client';
+import { AddBalanceDTO } from './dto/add-balance.dto';
+import { RemoveBalanceDTO } from './dto/remove-balance.dto';
+import { Decimal } from '@prisma/client/runtime/library';
+import { BanUserDTO } from './dto/ban-user.dto';
 
 @Injectable()
 export class UserService {
@@ -159,7 +163,6 @@ export class UserService {
 
     return { message: 'Check email' };
   }
-
   async setVerify(email: string, code: string): Promise<any> {
     const user = await this.prisma.user.findUnique({
       where: { email: email },
@@ -182,5 +185,74 @@ export class UserService {
       email: updatedUser.email,
       balance: updatedUser.balance,
     };
+  }
+  async getUsersInfo(user: User): Promise<Partial<User>[]> {
+    if (user.type !== UserType.ADMIN) {
+      throw new HttpException('Only admins can access this information', 403);
+    }
+
+    return await this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        balance: true,
+        type: true,
+        isVerified: true,
+        createdAt: true,
+        goal: true,
+        ip: true,
+      },
+    });
+  }
+  async addBalance(data: AddBalanceDTO) {
+    const { user, email, amount } = data;
+
+    if (user.type !== UserType.ADMIN) {
+      throw new HttpException('Only admins can add balance', 403);
+    }
+
+    return await this.prisma.user.update({
+      where: { email: email },
+      data: { balance: { increment: amount } },
+    });
+  }
+
+  async removeBalance(data: RemoveBalanceDTO) {
+    let { user, email, amount } = data;
+
+    if (user.type !== UserType.ADMIN) {
+      throw new HttpException('Only admins can add balance', 403);
+    }
+
+    const currentUser = await this.prisma.user.findUnique({
+      where: { email: email },
+      select: { balance: true },
+    });
+
+    if (!currentUser) {
+      throw new HttpException('User not found', 404);
+    }
+
+    const currentBalance = new Decimal(currentUser.balance).toNumber();
+
+    amount = Math.min(amount, currentBalance);
+
+    return await this.prisma.user.update({
+      where: { email: email },
+      data: { balance: { decrement: amount } },
+    });
+  }
+
+  async banUser(data: BanUserDTO) {
+    let { user, email } = data;
+
+    if (user.type !== UserType.ADMIN) {
+      throw new HttpException('Only admins can add balance', 403);
+    }
+
+    return await this.prisma.user.update({
+      where: { email: email },
+      data: { isBanned: true },
+    });
   }
 }
