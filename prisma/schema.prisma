@@ -44,7 +44,6 @@ model User {
   isVerified            Boolean  @default(false)
   ip                    String   @default("0.0.0.0")
   isBanned              Boolean  @default(false)
-  goal                  String
   verification_code     String?
   change_passwor_code   String?
   createdAt             DateTime @default(now())
@@ -83,6 +82,7 @@ model Order {
   proxyType     ProxyType     @default(HTTPS)
   type          Proxy         
   status        PaymentStatus @default(PENDING)  
+  goal          String
   totalPrice    Decimal
   proxySellerId Int?
   createdAt     DateTime      @default(now())

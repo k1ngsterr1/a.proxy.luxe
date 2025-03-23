@@ -199,7 +199,6 @@ export class UserService {
         type: true,
         isVerified: true,
         createdAt: true,
-        goal: true,
         ip: true,
       },
     });

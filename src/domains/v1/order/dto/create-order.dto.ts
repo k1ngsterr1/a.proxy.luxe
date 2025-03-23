@@ -5,6 +5,8 @@ import {
   IsPositive,
   IsEnum,
   IsOptional,
+  IsNotEmpty,
+  MinLength,
 } from 'class-validator';
 import { ProxyType, Proxy } from '@prisma/client';
 
@@ -40,4 +42,9 @@ export class CreateOrderDto {
 
   @IsEnum(Proxy)
   type: Proxy;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(10)
+  goal: string;
 }

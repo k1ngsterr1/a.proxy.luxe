@@ -4,17 +4,13 @@ import {
   Get,
   Body,
   Param,
-  HttpCode,
-  HttpStatus,
   UseGuards,
   Request,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FinishOrderDto } from './dto/payment-order.dto';
-import { OrderDto } from './dto/order.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('v1/orders')

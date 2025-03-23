@@ -80,6 +80,7 @@ export class OrderService {
         periodDays: createOrderDto.periodDays,
         proxyType: createOrderDto.proxyType,
         status: PaymentStatus.PENDING,
+        goal: createOrderDto.goal,
         tariff: createOrderDto.tariff,
         totalPrice: totalPrice,
       },
