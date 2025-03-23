@@ -11,6 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResetPasswordEmailDto } from './dto/reset-email.dto';
+import { request } from 'http';
 @Controller('v1/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -40,7 +41,13 @@ export class AuthController {
   @Post('reset-password-email')
   async resetPasswordEmail(
     @Body() resetPasswordEmailDto: ResetPasswordEmailDto,
+    @Request() request,
   ) {
-    return this.authService.sendResetPassword(resetPasswordEmailDto);
+    const lang =
+      request.headers['accept-language']
+        ?.split(',')[0]
+        ?.split('-')[0]
+        ?.toLowerCase() || 'en';
+    return this.authService.sendResetPassword(resetPasswordEmailDto, lang);
   }
 }

@@ -34,7 +34,12 @@ export class UserController {
   @Post('send-verification')
   @UseGuards(AuthGuard('jwt'))
   async sendVerificationEmail(@Request() request) {
-    return this.userService.sendVerificationEmail(request.user.email);
+    const lang =
+      request.headers['accept-language']
+        ?.split(',')[0]
+        ?.split('-')[0]
+        ?.toLowerCase() || 'en';
+    return this.userService.sendVerificationEmail(request.user.email, lang);
   }
 
   @Post('verify')
