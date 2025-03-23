@@ -11,9 +11,11 @@ import { BlacklistCheckerService } from './blacklist-checker.service';
 import { BlacklistCheckerController } from './blacklist-checker.controller';
 import { Ipv6Controller } from './ipv6.controller';
 import { Ipv6Service } from './ipv6.service';
+import { ProxyCheckerController } from './proxy-checker.controller';
+import { ProxyCheckerService } from './proxy-checker.service';
 
 @Module({
-  providers: [IpService, PortCheckerService, AnonymityCheckerService, WhoisService, BlacklistCheckerService, Ipv6Service],
-  controllers: [IpController, PortCheckerController, AnonymityCheckerController, WhoisController, BlacklistCheckerController, Ipv6Controller]
+  providers: [IpService, PortCheckerService, AnonymityCheckerService, WhoisService, BlacklistCheckerService, Ipv6Service, ProxyCheckerService],
+  controllers: [IpController, PortCheckerController, AnonymityCheckerController, WhoisController, BlacklistCheckerController, Ipv6Controller, ProxyCheckerController]
 })
 export class ServicesModule {}

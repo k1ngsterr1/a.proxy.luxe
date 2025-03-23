@@ -41,4 +41,10 @@ export class ProductController {
   async getActiveProxyList(@Param('type') type: string, @Request() req) {
     return await this.productService.getActiveProxyList(req.user.id, type);
   }
+
+  // @Post('prolong')
+  // @UseGuards(AuthGuard('jwt'))
+  // async prolongProxy(@Body() data: {}) {
+  //   return await this.productService.prolongProxy(data);
+  // }
 }
