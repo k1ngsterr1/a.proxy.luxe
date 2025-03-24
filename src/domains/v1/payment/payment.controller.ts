@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
 import * as crypto from 'crypto';
 import { AuthGuard } from '@nestjs/passport';
+import { CreateInvoicePayeer } from './dto/create-invoice-payeer.dto';
 
 @Controller('v1/payment')
 export class PaymentController {
@@ -95,6 +96,10 @@ export class PaymentController {
       .send({ message: 'Payment successful', userId, amount });
   }
 
+  @Post('payeer/invoice')
+  async createInvoicePayeer(@Body() data: CreateInvoicePayeer) {
+    return this.paymentService.createInvoicePayeer(data);
+  }
   @Get('history')
   @UseGuards(AuthGuard('jwt'))
   async getPaymentHistory(@Request() request) {

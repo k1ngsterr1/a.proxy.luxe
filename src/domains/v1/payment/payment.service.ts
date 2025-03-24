@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import axios, { Axios } from 'axios';
 import { PrismaService } from '../shared/prisma.service';
 import { Payment } from '@prisma/client';
+import { CreateInvoicePayeer } from './dto/create-invoice-payeer.dto';
+import * as qs from 'qs';
 
 @Injectable()
 export class PaymentService {
@@ -11,7 +13,6 @@ export class PaymentService {
   private readonly api_id: string;
   private readonly api_pass: string;
   private readonly merchant_id: string;
-  private readonly merchant_pass: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -28,34 +29,35 @@ export class PaymentService {
     this.merchant_id = configService.get<string>(
       'PAYEER_MERCHANT_ID',
     ) as string;
-    this.merchant_pass = configService.get<string>(
-      'PAYEER_MERCHANT_SECRET_KEY',
-    ) as string;
+    console.log(this.account, this.api_id, this.api_pass, this.merchant_id);
   }
 
-  /**
-   * Generate Payeer Payment URL
-   */
-  async generatePaymentLink(
-    orderId: string,
-    amount: string,
-    currency: string,
-  ): Promise<string> {
-    const response = await this.payeer.post('', null, {
-      params: {
-        account: this.account,
-        apiId: this.api_id,
-        apiPass: this.api_pass,
-        m_shop: this.merchant_id,
-        action: 'invoiceCreate',
-        m_orderid: orderId,
-        m_amount: Number(amount),
-        m_curr: currency,
-        m_desc: 'Test payeer payment',
-      },
-    });
+  async createInvoicePayeer(data: CreateInvoicePayeer): Promise<Object> {
+    try {
+      const response = await this.payeer.post(
+        '?invoiceCreate',
+        {
+          account: this.account,
+          apiId: this.api_id,
+          apiPass: this.api_pass,
+          action: 'invoiceCreate',
+          m_shop: this.merchant_id,
+          m_orderid: data.orderId,
+          m_amount: data.amount,
+          m_curr: 'USD',
+          m_desc: 'Proxy.luxe buyer',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
+      );
 
-    return response.data.url;
+      return { url: response.data.url };
+    } catch (error) {
+      throw new HttpException('Failed to create invoice', 500);
+    }
   }
 
   async successfulPayment(userId: string, amount: number) {
