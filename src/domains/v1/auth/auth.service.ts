@@ -149,7 +149,28 @@ export class AuthService {
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    // const user = await this.prisma.user.findUnique({where: {}})
+    const { email, code, newPassword } = resetPasswordDto;
+
+    const user = await this.prisma.user.findUnique({ where: { email: email } });
+    if (!user) {
+      throw new HttpException('User with this email does not exist', 400);
+    }
+
+    const isPasswordValid = await bcrypt.compare(newPassword, user.password);
+    if (isPasswordValid) {
+      throw new HttpException('New password matches old password', 400);
+    }
+    if (user.change_password_code !== code) {
+      throw new HttpException('Invalid code', 400);
+    }
+
+    await this.prisma.user.update({
+      where: { email: email },
+      data: {
+        password: await bcrypt.hash(newPassword, 10),
+        change_password_code: null,
+      },
+    });
   }
 
   async sendResetPassword(data: ResetPasswordEmailDto, lang: string = 'en') {
@@ -158,7 +179,7 @@ export class AuthService {
 
     await this.prisma.user.update({
       where: { email: email },
-      data: { change_passwor_code: code },
+      data: { change_password_code: code },
     });
 
     const emailTemplate =
