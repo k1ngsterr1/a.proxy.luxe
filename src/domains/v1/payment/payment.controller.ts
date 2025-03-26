@@ -7,7 +7,6 @@ import {
   Request,
   ParseFloatPipe,
   Get,
-  Param,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -97,9 +96,20 @@ export class PaymentController {
   }
 
   @Post('payeer/invoice')
-  async createInvoicePayeer(@Body() data: CreateInvoicePayeer) {
+  @UseGuards(AuthGuard('jwt'))
+  async createInvoicePayeer(
+    @Body() data: CreateInvoicePayeer,
+    @Request() request,
+  ) {
+    data.orderId = `${request.user.id}:${Date.now()}:${Math.floor(Math.random() * 1000)}`;
     return this.paymentService.createInvoicePayeer(data);
   }
+
+  @Post('payeer/success')
+  async payeerSuccessfulPayment(@Request() request) {
+    console.log(request.body);
+  }
+
   @Get('history')
   @UseGuards(AuthGuard('jwt'))
   async getPaymentHistory(@Request() request) {
