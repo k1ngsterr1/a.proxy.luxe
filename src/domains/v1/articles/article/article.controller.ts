@@ -7,12 +7,16 @@ import {
   Patch,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { AdminGuard } from '../../auth/guards/admin.guard';
 
 @Controller('v1/articles')
+@UseGuards(AuthGuard('jwt'), AdminGuard)
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
