@@ -7,6 +7,7 @@ import {
   UseGuards,
   Request,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -45,5 +46,11 @@ export class OrderController {
   @UseGuards(AuthGuard('jwt'))
   async finishOrder(@Body() finishDto: FinishOrderDto) {
     return this.orderService.finishOrder(finishDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async deleteById(@Param('id') id: string, @Request() request) {
+    return this.orderService.deleteById(request.user.id, id);
   }
 }

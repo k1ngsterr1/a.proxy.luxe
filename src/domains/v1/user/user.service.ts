@@ -381,4 +381,11 @@ export class UserService {
       },
     });
   }
+  async getPromocode(user: User) {
+    if (user.type !== UserType.ADMIN) {
+      throw new HttpException('Admins only', 403);
+    }
+
+    return await this.prisma.coupon.findMany();
+  }
 }

@@ -81,4 +81,10 @@ export class UserController {
     data.user = req.user;
     return this.userService.addPromocode(data);
   }
+
+  @Get('promocode')
+  @UseGuards(AuthGuard('jwt'))
+  async getPromocode(@Request() req) {
+    return this.userService.getPromocode(req.user);
+  }
 }

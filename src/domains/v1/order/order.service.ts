@@ -223,4 +223,16 @@ export class OrderService {
     }
     return { isValidCoupon: true, coupon: coupon };
   }
+
+  async deleteById(userId: string, orderId: string) {
+    const order = await this.prisma.order.delete({
+      where: { userId: userId, id: orderId },
+    });
+
+    if (!order) {
+      throw new HttpException('Invalid order id', 400);
+    }
+
+    return order;
+  }
 }
