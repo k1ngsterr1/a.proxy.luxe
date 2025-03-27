@@ -253,7 +253,6 @@ export class ProductService {
               password,
             }),
           ) ?? [];
-      console.log(response.data.data.items);
 
       return {
         status: 'success',
