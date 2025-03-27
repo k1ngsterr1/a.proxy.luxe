@@ -59,8 +59,8 @@ model Coupon {
 }
 
 model Article {
-  id              String   @id @default(uuid())
-  title           String
+  id             String   @id @default(uuid())
+  title          String
   content        String   @db.Text
   image          String?
 }

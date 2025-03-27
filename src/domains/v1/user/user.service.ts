@@ -311,6 +311,7 @@ export class UserService {
         isVerified: true,
         createdAt: true,
         ip: true,
+        isBanned: true,
       },
     });
   }
