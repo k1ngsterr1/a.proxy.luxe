@@ -234,13 +234,26 @@ export class ProductService {
       const filteredItems =
         response.data.data.items
           ?.filter((item) => proxySellerIds.has(item.order_id))
-          ?.map(({ ip, protocol, port_socks, port_http, country }) => ({
-            ip,
-            protocol,
-            port_socks,
-            port_http,
-            country,
-          })) ?? [];
+          ?.map(
+            ({
+              ip,
+              protocol,
+              port_socks,
+              port_http,
+              country,
+              login,
+              password,
+            }) => ({
+              ip,
+              protocol,
+              port_socks,
+              port_http,
+              country,
+              login,
+              password,
+            }),
+          ) ?? [];
+      console.log(response.data.data.items);
 
       return {
         status: 'success',
