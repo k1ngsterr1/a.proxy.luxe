@@ -60,6 +60,12 @@ model Category {
   articles    Article[]
 }
 
+model Coupon {
+  code        String   @id @db.VarChar(255)
+  discount    Int
+  limit       Int      @default(100)
+}
+
 model Article {
   id              String   @id @default(uuid())
   title           String
@@ -84,6 +90,7 @@ model Order {
   status        PaymentStatus @default(PENDING)  
   goal          String
   totalPrice    Decimal
+  promocode     String?
   proxySellerId Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt

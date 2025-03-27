@@ -6,6 +6,7 @@ import { AddBalanceDTO } from './dto/add-balance.dto';
 import { RemoveBalanceDTO } from './dto/remove-balance.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { BanUserDTO } from './dto/ban-user.dto';
+import { AddPromocodeDTO } from './dto/add-promo.dto';
 
 @Injectable()
 export class UserService {
@@ -362,6 +363,22 @@ export class UserService {
     return await this.prisma.user.update({
       where: { email: email },
       data: { isBanned: true },
+    });
+  }
+
+  async addPromocode(data: AddPromocodeDTO) {
+    let { user, promocode, discount, limit } = data;
+
+    if (user.type !== UserType.ADMIN) {
+      throw new HttpException('Only admins can add balance', 403);
+    }
+
+    return await this.prisma.coupon.create({
+      data: {
+        code: promocode,
+        discount: discount,
+        limit: limit,
+      },
     });
   }
 }

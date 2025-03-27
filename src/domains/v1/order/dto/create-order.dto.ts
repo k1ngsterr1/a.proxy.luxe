@@ -45,6 +45,5 @@ export class CreateOrderDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(10)
   goal: string;
 }

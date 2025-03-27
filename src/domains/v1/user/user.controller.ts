@@ -12,6 +12,7 @@ import { User } from '@prisma/client';
 import { AddBalanceDTO } from './dto/add-balance.dto';
 import { RemoveBalanceDTO } from './dto/remove-balance.dto';
 import { BanUserDTO } from './dto/ban-user.dto';
+import { AddPromocodeDTO } from './dto/add-promo.dto';
 
 @Controller('v1/user')
 export class UserController {
@@ -72,5 +73,12 @@ export class UserController {
   async banUser(@Body() data: BanUserDTO, @Request() req) {
     data.user = req.user;
     return this.userService.banUser(data);
+  }
+
+  @Post('promocode')
+  @UseGuards(AuthGuard('jwt'))
+  async addPromocode(@Body() data: AddPromocodeDTO, @Request() req) {
+    data.user = req.user;
+    return this.userService.addPromocode(data);
   }
 }

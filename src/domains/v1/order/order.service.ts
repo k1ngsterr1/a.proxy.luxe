@@ -142,7 +142,22 @@ export class OrderService {
       throw new HttpException('User not found', 404);
     }
 
-    if (new Decimal(user.balance).lt(order.totalPrice)) {
+    let totalPrice = order.totalPrice;
+    if (paymentDto.promocode) {
+      const { isValidCoupon, coupon } = await this.checkPromocode(
+        paymentDto.promocode,
+      );
+      if (!isValidCoupon) {
+        throw new HttpException('Invalid promocode', 400);
+      }
+      if (isValidCoupon && coupon) {
+        totalPrice = new Decimal(totalPrice)
+          .mul(Decimal.sub(100, coupon.discount))
+          .div(100);
+      }
+    }
+
+    if (new Decimal(user.balance).lt(totalPrice)) {
       throw new HttpException('Insufficient balance', 400);
     }
 
@@ -171,19 +186,41 @@ export class OrderService {
 
     const placedOrder = await this.productService.placeOrder(orderInfo);
 
-    await this.prisma.order.update({
-      where: { id: order.id },
-      data: { proxySellerId: placedOrder, status: 'PAID' },
-    });
-    await this.prisma.user.update({
-      where: { id: order.userId },
-      data: { balance: { increment: -order.totalPrice } },
-    });
+    await this.prisma.$transaction([
+      this.prisma.order.update({
+        where: { id: order.id },
+        data: { proxySellerId: placedOrder, status: 'PAID' },
+      }),
+
+      this.prisma.user.update({
+        where: { id: order.userId },
+        data: { balance: { decrement: totalPrice } },
+      }),
+    ]);
+    if (paymentDto.promocode) {
+      await this.prisma.coupon.update({
+        where: { code: paymentDto.promocode },
+        data: { limit: { decrement: 1 } },
+      });
+    }
 
     return {
       message: 'Successfully finished order',
       type: order.type,
       orderId: order.id,
     };
+  }
+
+  async checkPromocode(promocode: string) {
+    const coupon = await this.prisma.coupon.findUnique({
+      where: { code: promocode },
+    });
+    if (!coupon) {
+      return { isValidCoupon: false, coupon: null };
+    }
+    if (coupon.limit === 0) {
+      return { isValidCoupon: false, coupon: null };
+    }
+    return { isValidCoupon: true, coupon: coupon };
   }
 }
