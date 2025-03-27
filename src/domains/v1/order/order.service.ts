@@ -68,7 +68,9 @@ export class OrderService {
 
     const totalPrice = await this.productService.getCalcForOrder(
       createOrderDto.type,
-      createOrderDto.quantity,
+      createOrderDto.type !== 'resident'
+        ? createOrderDto.quantity
+        : parseInt(createOrderDto.tariff),
     );
 
     return await this.prisma.order.create({

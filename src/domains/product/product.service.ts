@@ -196,10 +196,21 @@ export class ProductService {
 
   async getCalcForOrder(type: Proxy, quantity: number): Promise<number> {
     if (type === 'resident') {
-      const price = 2.4;
-      const totalPrice = price * quantity;
+      const pricingTable: Record<number, number> = {
+        1: 2.4,
+        3: 7,
+        10: 21,
+        25: 50,
+        50: 90,
+        100: 170,
+      };
+      const price = pricingTable[quantity];
 
-      return totalPrice;
+      if (price === undefined) {
+        throw new HttpException(`No pricing found for ${quantity} GB`, 400);
+      }
+
+      return price;
     } else {
       const price = type === 'ipv6' ? 0.1 : 2.4;
       const totalPrice = price * quantity;
