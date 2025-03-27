@@ -52,14 +52,6 @@ model User {
   payments              Payment[]
 }
 
-model Category {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(255)
-  slug        String?  @db.VarChar(255)
-  description String?  @db.Text
-  articles    Article[]
-}
-
 model Coupon {
   code        String   @id @db.VarChar(255)
   discount    Int
@@ -70,11 +62,7 @@ model Article {
   id              String   @id @default(uuid())
   title           String
   content        String   @db.Text
-  image          String?  // nullable
-  seoKeywords    String[] // аналог simple-array
-  seoDescription String?  @db.Text
-  categoryId     String
-  category       Category @relation(fields: [categoryId], references: [id])
+  image          String?
 }
 
 model Order {

@@ -12,17 +12,4 @@ export class CreateArticleDto {
   @IsOptional()
   @IsString()
   image?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  seo_keywords?: string[];
-
-  @IsOptional()
-  @IsString()
-  seo_description?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  category_id: string;
 }
