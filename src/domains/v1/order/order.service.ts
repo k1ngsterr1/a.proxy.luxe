@@ -176,13 +176,13 @@ export class OrderService {
       );
     }
     const orderInfo: OrderInfo = {
+      type: order.type,
       paymentId: 1,
-      tarifId: reference.tariffs?.find((tariff) => tariff.name === order.tariff)
-        ?.id,
+      tariff: order.tariff ? order.tariff : undefined,
       countryId: reference.country?.find(
         (country) => order.country && country.name.endsWith(order.country),
       )?.id,
-      customTargetName: 'Proxy for proxy.luxe buyers',
+      customTargetName: order.goal,
       periodId: order.periodDays ? order.periodDays : undefined,
       quantity: order.quantity ? order.quantity : undefined,
       protocol: order.proxyType ? order.proxyType : undefined,

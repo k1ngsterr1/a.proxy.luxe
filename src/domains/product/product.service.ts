@@ -231,55 +231,91 @@ export class ProductService {
   }
 
   async getActiveProxyList(userId: string, type: string) {
-    if (type === undefined || !Object.keys(ActiveProxyType).includes(type)) {
+    if (!type || !Object.keys(ActiveProxyType).includes(type)) {
       throw new HttpException('Invalid proxy type', 400);
     }
+
     try {
       const orders = await this.prisma.order.findMany({
-        where: { userId: userId, proxySellerId: { not: null } },
+        where: { userId, proxySellerId: { not: null } },
         select: { proxySellerId: true },
       });
 
       const proxySellerIds = new Set(
         orders.map((order) => order.proxySellerId?.toString()),
       );
-      const response: AxiosResponse<ActiveProxy> = await this.proxySeller.get(
-        `/proxy/list/${type}`,
-      );
-      if (response.data.status !== 'success') {
+
+      if (type !== 'resident') {
+        const response: AxiosResponse<ActiveProxy> = await this.proxySeller.get(
+          `/proxy/list/${type}`,
+        );
+
+        if (response.data.status !== 'success') {
+          return {
+            status: 'error',
+            message: 'Invalid response from proxy provider',
+          };
+        }
+
+        const filteredItems =
+          response.data.data.items
+            ?.filter((item) => proxySellerIds.has(item.order_id))
+            ?.map(
+              ({
+                ip,
+                protocol,
+                port_socks,
+                port_http,
+                country,
+                login,
+                password,
+              }) => ({
+                ip,
+                protocol,
+                port_socks,
+                port_http,
+                country,
+                login,
+                password,
+              }),
+            ) ?? [];
+
         return {
-          status: 'error',
-          message: 'Invalid response from proxy provider',
+          status: 'success',
+          data: { items: filteredItems },
+        };
+      } else {
+        // Resident proxies
+        const result: any[] = [];
+
+        for (const proxySellerId of proxySellerIds) {
+          const response = await this.proxySeller.get(
+            `/residentsubuser/lists?package_key=${proxySellerId}`,
+          );
+
+          if (response.data.status !== 'success') continue;
+
+          const proxies = response.data.data;
+
+          for (const proxy of proxies) {
+            const ports: number[] = [];
+            for (let i = 0; i < proxy.export.ports; i++) {
+              ports.push(10000 + i);
+            }
+
+            result.push({
+              login: proxy.login,
+              password: proxy.password,
+              port: ports.join(','),
+            });
+          }
+        }
+
+        return {
+          status: 'success',
+          data: result,
         };
       }
-
-      const filteredItems =
-        response.data.data.items
-          ?.filter((item) => proxySellerIds.has(item.order_id))
-          ?.map(
-            ({
-              ip,
-              protocol,
-              port_socks,
-              port_http,
-              country,
-              login,
-              password,
-            }) => ({
-              ip,
-              protocol,
-              port_socks,
-              port_http,
-              country,
-              login,
-              password,
-            }),
-          ) ?? [];
-
-      return {
-        status: 'success',
-        data: { items: filteredItems },
-      };
     } catch (error) {
       console.error('Error fetching active proxy list:', error);
       return {
@@ -291,11 +327,52 @@ export class ProductService {
 
   async placeOrder(orderInfo: OrderInfo) {
     try {
-      const response = await this.proxySeller.post('/order/make', orderInfo);
-      return response.data.data.orderId;
+      if (orderInfo.type !== 'resident') {
+        const response = await this.proxySeller.post('/order/make', orderInfo);
+        return response.data.data.orderId;
+      } else {
+        const response = await this.proxySeller.post(
+          '/residentsubuser/create',
+          {
+            is_link_date: false,
+            rotation: 1,
+            traffic_limit: this.convertToBytes(orderInfo.tariff as string),
+            expired_at: this.getOneMonthLaterFormatted(),
+          },
+        );
+        return response.data.data.package_key;
+      }
     } catch (error) {
       console.log(error);
       throw new HttpException('Failed to place an order', 500);
     }
+  }
+  async convertToBytes(tariff: string): Promise<number> {
+    const [valueStr, unitRaw] = tariff.trim().split(/\s+/);
+    const value = parseFloat(valueStr);
+    const unit = unitRaw.toLowerCase();
+
+    const units: Record<string, number> = {
+      b: 1,
+      kb: 1024,
+      mb: 1024 ** 2,
+      gb: 1024 ** 3,
+      tb: 1024 ** 4,
+    };
+
+    if (!units[unit]) throw new Error(`Unknown unit: ${unit}`);
+
+    return Math.floor(value * units[unit]);
+  }
+  async getOneMonthLaterFormatted(): Promise<string> {
+    const now = new Date();
+    const oneMonthLater = new Date(now);
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+
+    const day = String(oneMonthLater.getDate()).padStart(2, '0');
+    const month = String(oneMonthLater.getMonth() + 1).padStart(2, '0');
+    const year = oneMonthLater.getFullYear();
+
+    return `${day}.${month}.${year}`;
   }
 }
