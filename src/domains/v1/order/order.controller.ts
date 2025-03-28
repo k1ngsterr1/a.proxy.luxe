@@ -44,8 +44,13 @@ export class OrderController {
 
   @Post('finish')
   @UseGuards(AuthGuard('jwt'))
-  async finishOrder(@Body() finishDto: FinishOrderDto) {
-    return this.orderService.finishOrder(finishDto);
+  async finishOrder(@Body() finishDto: FinishOrderDto, @Request() request) {
+    const lang =
+      request.headers['accept-language']
+        ?.split(',')[0]
+        ?.split('-')[0]
+        ?.toLowerCase() || 'en';
+    return this.orderService.finishOrder(finishDto, lang);
   }
 
   @Delete(':id')

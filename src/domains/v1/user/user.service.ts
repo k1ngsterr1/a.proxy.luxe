@@ -382,6 +382,108 @@ export class UserService {
       },
     });
   }
+  async sendProxyEmail(email: string, lang: string = 'en'): Promise<any> {
+    const emailTemplate =
+      lang === 'ru'
+        ? `
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Покупка прокси - PROXY.LUXE</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+      <table align="center" width="100%" style="max-width:600px; background-color: #000000; border-radius: 8px; color: white; padding: 30px;">
+        <tr>
+          <td align="center" style="font-size: 24px; font-weight: bold; color: #f3d675;">PROXY.LUXE</td>
+        </tr>
+        <tr>
+          <td style="padding-top: 20px; text-align: center;">
+            Спасибо за покупку! Ваши прокси скоро будут доступны в личном кабинете.
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding: 30px 0;">
+            <a href="https://proxy.luxe/ru/personal-account" style="background-color: #f3d675; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold;">
+              Перейти в личный кабинет
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center; font-size: 14px; color: #999;">
+            Если возникли вопросы, напишите нам: <a href="mailto:admin@proxy.luxe" style="color: #f3d675;">admin@proxy.luxe</a>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    `
+        : `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Proxy Purchase - PROXY.LUXE</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+      <table align="center" width="100%" style="max-width:600px; background-color: #000000; border-radius: 8px; color: white; padding: 30px;">
+        <tr>
+          <td align="center" style="font-size: 24px; font-weight: bold; color: #f3d675;">PROXY.LUXE</td>
+        </tr>
+        <tr>
+          <td style="padding-top: 20px; text-align: center;">
+            Thank you for your purchase! Your proxies will soon be available in your dashboard.
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding: 30px 0;">
+            <a href="https://proxy.luxe/en/personal-account" style="background-color: #f3d675; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold;">
+              Go to Dashboard
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center; font-size: 14px; color: #999;">
+            If you have any questions, contact us at <a href="mailto:admin@proxy.luxe" style="color: #f3d675;">admin@proxy.luxe</a>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    `;
+
+    const transporter = nodemailer.createTransport({
+      pool: true,
+      host: 'smtp.timeweb.ru',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+      debug: true,
+    });
+
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject:
+        lang === 'ru' ? 'Спасибо за покупку!' : 'Thank you for your purchase!',
+      text:
+        lang === 'ru'
+          ? 'Спасибо за покупку! Ваши прокси скоро будут доступны в личном кабинете.'
+          : 'Thank you for your purchase! Your proxies will soon be available in your dashboard.',
+      html: emailTemplate,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return { message: 'Proxy purchase email sent' };
+  }
+
   async getPromocode(user: User) {
     if (user.type !== UserType.ADMIN) {
       throw new HttpException('Admins only', 403);

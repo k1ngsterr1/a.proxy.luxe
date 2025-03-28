@@ -11,12 +11,14 @@ import { PrismaService } from '../shared/prisma.service';
 import { ProductService } from 'src/domains/product/product.service';
 import { OrderInfo } from 'src/domains/product/dto/order.dto';
 import { Decimal } from '@prisma/client/runtime/library';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
     private productService: ProductService,
+    private userService: UserService,
   ) {}
   async create(createOrderDto: CreateOrderDto) {
     if (
@@ -123,7 +125,7 @@ export class OrderService {
     return order;
   }
 
-  async finishOrder(paymentDto: FinishOrderDto) {
+  async finishOrder(paymentDto: FinishOrderDto, lang: string = 'en') {
     const order = await this.prisma.order.findUnique({
       where: { id: paymentDto.orderId },
     });
@@ -186,25 +188,27 @@ export class OrderService {
       protocol: order.proxyType ? order.proxyType : undefined,
     };
 
-    const placedOrder = await this.productService.placeOrder(orderInfo);
+    // const placedOrder = await this.productService.placeOrder(orderInfo);
 
-    await this.prisma.$transaction([
-      this.prisma.order.update({
-        where: { id: order.id },
-        data: { proxySellerId: placedOrder, status: 'PAID' },
-      }),
+    // await this.prisma.$transaction([
+    //   this.prisma.order.update({
+    //     where: { id: order.id },
+    //     data: { proxySellerId: placedOrder, status: 'PAID' },
+    //   }),
 
-      this.prisma.user.update({
-        where: { id: order.userId },
-        data: { balance: { decrement: totalPrice } },
-      }),
-    ]);
-    if (paymentDto.promocode) {
-      await this.prisma.coupon.update({
-        where: { code: paymentDto.promocode },
-        data: { limit: { decrement: 1 } },
-      });
-    }
+    //   this.prisma.user.update({
+    //     where: { id: order.userId },
+    //     data: { balance: { decrement: totalPrice } },
+    //   }),
+    // ]);
+    // if (paymentDto.promocode) {
+    //   await this.prisma.coupon.update({
+    //     where: { code: paymentDto.promocode },
+    //     data: { limit: { decrement: 1 } },
+    //   });
+    // }
+
+    await this.userService.sendProxyEmail(user.email, lang);
 
     return {
       message: 'Successfully finished order',

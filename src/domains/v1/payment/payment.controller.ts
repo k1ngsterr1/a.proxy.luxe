@@ -109,8 +109,8 @@ export class PaymentController {
   async payeerSuccessfulPayment(@Request() request) {
     console.log(request);
     await this.paymentService.successfulPayment(
-      request.body.referenceId,
-      request.body.amount,
+      request.body.m_orderid,
+      Number(request.body.m_amount),
     );
   }
 
