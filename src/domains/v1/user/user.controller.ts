@@ -44,8 +44,9 @@ export class UserController {
   }
 
   @Post('verify')
-  async verifyCode(@Body() data: { code: string; email: string }) {
-    return this.userService.setVerify(data.email, data.code);
+  @UseGuards(AuthGuard('jwt'))
+  async verifyCode(@Body() data: { code: string }, @Request() request) {
+    return this.userService.setVerify(request.user.email, data.code);
   }
 
   @Get('info')
