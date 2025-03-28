@@ -101,13 +101,17 @@ export class PaymentController {
     @Body() data: CreateInvoicePayeer,
     @Request() request,
   ) {
-    data.orderId = `${request.user.id}:${Date.now()}:${Math.floor(Math.random() * 1000)}`;
+    data.orderId = request.user.id;
     return this.paymentService.createInvoicePayeer(data);
   }
 
   @Post('payeer/success')
   async payeerSuccessfulPayment(@Request() request) {
-    console.log(request.body);
+    console.log(request);
+    await this.paymentService.successfulPayment(
+      request.body.referenceId,
+      request.body.amount,
+    );
   }
 
   @Get('history')
