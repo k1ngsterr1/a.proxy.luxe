@@ -26,6 +26,11 @@ export class ProductController {
     return await this.productService.getProductReferenceByType(type);
   }
 
+  @Get('geo/reference')
+  async getGeoReference() {
+    return await this.productService.getGeoReference();
+  }
+
   @Post('/calc')
   async getCalc(@Body() body: CalcRequestDTO) {
     return await this.productService.getCalc(body);

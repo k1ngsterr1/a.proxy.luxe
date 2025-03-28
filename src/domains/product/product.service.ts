@@ -16,6 +16,8 @@ import { ActiveProxy, ActiveProxyType } from './rdo/get-active-proxy.rdo';
 import { Proxy } from '@prisma/client';
 import { OrderInfo } from './dto/order.dto';
 import { PrismaService } from '../v1/shared/prisma.service';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class ProductService {
@@ -35,6 +37,7 @@ export class ProductService {
   > {
     const response: AxiosResponse<ReferenceResponse> =
       await this.proxySeller.get('/reference/list');
+
     const reference = response.data;
 
     if (!reference.data) {
@@ -102,6 +105,14 @@ export class ProductService {
       amounts: amounts,
     };
   }
+
+  async getGeoReference() {
+    const filePath = path.join(process.cwd(), 'src', 'uploads', 'geo.json');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const geoData = JSON.parse(fileContent);
+    return geoData;
+  }
+
   async getProductReferenceByType(
     type: string,
   ): Promise<ResponseReferenceSingleDTO | ResponseErrorDTO> {

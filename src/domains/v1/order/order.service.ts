@@ -188,25 +188,25 @@ export class OrderService {
       protocol: order.proxyType ? order.proxyType : undefined,
     };
 
-    // const placedOrder = await this.productService.placeOrder(orderInfo);
+    const placedOrder = await this.productService.placeOrder(orderInfo);
 
-    // await this.prisma.$transaction([
-    //   this.prisma.order.update({
-    //     where: { id: order.id },
-    //     data: { proxySellerId: placedOrder, status: 'PAID' },
-    //   }),
+    await this.prisma.$transaction([
+      this.prisma.order.update({
+        where: { id: order.id },
+        data: { proxySellerId: placedOrder, status: 'PAID' },
+      }),
 
-    //   this.prisma.user.update({
-    //     where: { id: order.userId },
-    //     data: { balance: { decrement: totalPrice } },
-    //   }),
-    // ]);
-    // if (paymentDto.promocode) {
-    //   await this.prisma.coupon.update({
-    //     where: { code: paymentDto.promocode },
-    //     data: { limit: { decrement: 1 } },
-    //   });
-    // }
+      this.prisma.user.update({
+        where: { id: order.userId },
+        data: { balance: { decrement: totalPrice } },
+      }),
+    ]);
+    if (paymentDto.promocode) {
+      await this.prisma.coupon.update({
+        where: { code: paymentDto.promocode },
+        data: { limit: { decrement: 1 } },
+      });
+    }
 
     await this.userService.sendProxyEmail(user.email, lang);
 
