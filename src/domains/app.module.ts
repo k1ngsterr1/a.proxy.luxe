@@ -8,6 +8,7 @@ import { ArticleModule } from './v1/articles/article/article.module';
 import { ServicesModule } from './v1/services/services.module';
 import { PaymentModule } from './v1/payment/payment.module';
 import { SharedModule } from './v1/shared/shared.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { SharedModule } from './v1/shared/shared.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    HealthModule,
     ProductModule,
     UserModule,
     AuthModule,
