@@ -15,6 +15,7 @@ import { CalcRequestDTO, CalcResidentRequestDTO } from './dto/request.dto';
 import { ActiveProxy, ActiveProxyType } from './rdo/get-active-proxy.rdo';
 import { Proxy } from '@prisma/client';
 import { OrderInfo } from './dto/order.dto';
+import { ModifyResidentProxyDTO } from './dto/modify-resident-proxy.dto';
 import { PrismaService } from '../v1/shared/prisma.service';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -322,6 +323,52 @@ export class ProductService {
         status: 'error',
         message: 'Error fetching active proxy list',
       };
+    }
+  }
+
+  async addResidentProxyList(dto: ModifyResidentProxyDTO) {
+    try {
+      const geo: Record<string, string> = {};
+      if (dto.geo?.country) geo.country = dto.geo.country;
+      if (dto.geo?.region) geo.region = dto.geo.region;
+      if (dto.geo?.city) geo.city = dto.geo.city;
+      if (dto.geo?.isp) geo.isp = dto.geo.isp;
+
+      const payload: Record<string, any> = {
+        package_key: dto.package_key,
+        title: dto.title,
+        export: {
+          ports: dto.ports,
+          ext: 'txt',
+        },
+        rotation: dto.rotation,
+      };
+
+      if (Object.keys(geo).length > 0) {
+        payload.geo = geo;
+      }
+
+      if (dto.whitelist) {
+        payload.whitelist = dto.whitelist;
+      }
+
+      const response = await this.proxySeller.post(
+        '/residentsubuser/list/add',
+        payload,
+      );
+
+      if (response.data.status !== 'success') {
+        throw new HttpException(
+          response.data.message || 'Failed to create proxy list',
+          400,
+        );
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error creating resident proxy list:', error);
+      throw new HttpException('Failed to create proxy list', 500);
     }
   }
 

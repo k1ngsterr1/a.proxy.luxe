@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CalcRequestDTO, CalcResidentRequestDTO } from './dto/request.dto';
+import { ModifyResidentProxyDTO } from './dto/modify-resident-proxy.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('/v1/products')
@@ -39,6 +40,12 @@ export class ProductController {
   @Post('/calc/resident')
   async getCalcResident(@Body() body: CalcResidentRequestDTO) {
     return await this.productService.getCalcResident(body);
+  }
+
+  @Post('modify-proxy/resident')
+  @UseGuards(AuthGuard('jwt'))
+  async addResidentProxyList(@Body() body: ModifyResidentProxyDTO) {
+    return await this.productService.addResidentProxyList(body);
   }
 
   @Get('active-list/:type')
