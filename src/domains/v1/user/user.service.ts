@@ -491,4 +491,37 @@ export class UserService {
 
     return await this.prisma.coupon.findMany();
   }
+
+  async sendSupport(data: {
+    name: string;
+    email: string;
+    support: string;
+    message: string;
+  }): Promise<{ message: string }> {
+    const transporter = nodemailer.createTransport({
+      pool: true,
+      host: 'smtp.timeweb.ru',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      replyTo: data.email,
+      subject: `Support: ${data.support} — ${data.name}`,
+      text: `Name: ${data.name}\nEmail: ${data.email}\nCategory: ${data.support}\n\nMessage:\n${data.message}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return { message: 'Support request sent' };
+  }
 }

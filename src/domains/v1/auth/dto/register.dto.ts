@@ -1,4 +1,10 @@
-import { IsString, IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  IsOptional,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -9,4 +15,12 @@ export class RegisterDto {
   @IsNotEmpty()
   @MinLength(8)
   password: string;
+
+  @IsString()
+  @IsOptional()
+  referralId?: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Captcha token is required' })
+  captchaToken: string;
 }

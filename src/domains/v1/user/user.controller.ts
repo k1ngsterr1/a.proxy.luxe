@@ -8,15 +8,20 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserService } from './user.service';
+import { CaptchaService } from '../shared/captcha.service';
 import { User } from '@prisma/client';
 import { AddBalanceDTO } from './dto/add-balance.dto';
 import { RemoveBalanceDTO } from './dto/remove-balance.dto';
 import { BanUserDTO } from './dto/ban-user.dto';
 import { AddPromocodeDTO } from './dto/add-promo.dto';
+import { SendSupportDto } from './dto/send-support.dto';
 
 @Controller('v1/user')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private captchaService: CaptchaService,
+  ) {}
 
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
@@ -87,5 +92,19 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   async getPromocode(@Request() req) {
     return this.userService.getPromocode(req.user);
+  }
+
+  @Post('send-support')
+  async sendSupport(@Body() data: SendSupportDto) {
+    if (data.captchaToken) {
+      await this.captchaService.verifyCaptcha(data.captchaToken);
+    }
+
+    return this.userService.sendSupport({
+      name: data.name,
+      email: data.email,
+      support: data.support,
+      message: data.message,
+    });
   }
 }
